@@ -36,6 +36,14 @@ fn parse_txt(path: impl AsRef<Path>, insert_stmt: &mut Statement<'_>) -> anyhow:
         ));
     };
 
+    let cover_path = song
+        .header
+        .cover_path
+        .and_then(|cover_path| match cover_path {
+            Source::Local(cover_path) => Some(cover_path.as_os_str().as_bytes().to_owned()),
+            _ => None,
+        });
+
     insert_stmt.execute((
         full_path.as_os_str().as_bytes(),
         &song.header.title,
@@ -58,6 +66,7 @@ fn parse_txt(path: impl AsRef<Path>, insert_stmt: &mut Statement<'_>) -> anyhow:
             })
             .collect::<Vec<_>>()
             .join("\n"),
+        cover_path,
     ))?;
 
     Ok(())
@@ -101,14 +110,15 @@ fn main() -> anyhow::Result<()> {
         language TEXT,
         year INTEGER,
         duration REAL NOT NULL,
-        lyrics TEXT
+        lyrics TEXT,
+        cover_path BLOB
     )"#,
         (),
     )?;
 
     let tx = conn.transaction()?;
     {
-        let mut insert_stmt = tx.prepare("INSERT OR REPLACE INTO song (path, title, artist, language, year, duration, lyrics) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)")?;
+        let mut insert_stmt = tx.prepare("INSERT OR REPLACE INTO song (path, title, artist, language, year, duration, lyrics, cover_path) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)")?;
         walk_dir(args.path, &mut insert_stmt)?;
     }
     tx.commit()?;
