@@ -1,2 +1,3 @@
 [workspace]
-members = ["importer"]
+members = ["importer", "karaoke-server"]
+resolver = "2"
