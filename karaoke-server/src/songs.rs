@@ -51,7 +51,8 @@ impl SearchIndex {
         let duration_field = schema_builder.add_f64_field("duration", STORED);
         let schema = schema_builder.build();
 
-        let index = Index::create_in_ram(schema);
+        let mut index = Index::create_in_ram(schema);
+        index.set_default_multithread_executor()?;
 
         let mut index_writer = index.writer(50_000_000)?;
 
