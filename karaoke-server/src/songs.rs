@@ -5,7 +5,7 @@ use tantivy::{
     collector::TopDocs,
     query::QueryParser,
     schema::{Field, Schema, STORED, STRING, TEXT},
-    Document, Index, Searcher,
+    Document, Index, IndexReader,
 };
 
 #[derive(Debug, Clone, Serialize)]
@@ -35,7 +35,7 @@ pub struct SearchIndex {
     lyrics_field: Field,
     duration_field: Field,
 
-    searcher: Searcher,
+    reader: IndexReader,
     query_parser: QueryParser,
 }
 
@@ -77,7 +77,6 @@ impl SearchIndex {
         index_writer.commit()?;
 
         let reader = index.reader()?;
-        let searcher = reader.searcher();
 
         let mut query_parser = QueryParser::for_index(
             &index,
@@ -96,19 +95,21 @@ impl SearchIndex {
             year_field,
             lyrics_field,
             duration_field,
-            searcher,
+            reader,
             query_parser,
         })
     }
 
     pub fn search(&self, query: &str) -> tantivy::Result<Vec<serde_json::Value>> {
+        let searcher = self.reader.searcher();
+
         let query = self.query_parser.parse_query(query)?;
-        let top_songs = self.searcher.search(&query, &TopDocs::with_limit(50))?;
+        let top_songs = searcher.search(&query, &TopDocs::with_limit(50))?;
 
         top_songs
             .into_iter()
             .map(|(weight, address)| {
-                let song = self.searcher.doc(address)?;
+                let song = searcher.doc(address)?;
 
                 let song = Song {
                     row_id: song.get_first(self.rowid_field).unwrap().as_i64().unwrap(),
