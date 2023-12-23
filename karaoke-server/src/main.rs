@@ -23,6 +23,9 @@ use r2d2_sqlite::{rusqlite::OpenFlags, SqliteConnectionManager};
 use tokio::{fs::File, io::AsyncSeekExt};
 use tower_http::trace::{DefaultMakeSpan, TraceLayer};
 
+use crate::websocket::ws_handler;
+
+mod websocket;
 
 #[derive(Parser, Debug)]
 struct Args {
@@ -65,6 +68,7 @@ async fn main() -> anyhow::Result<()> {
     let app = Router::new()
         .route("/", get(root))
         .route("/cover/:id", get(get_cover))
+        .route("/ws", get(ws_handler))
         .with_state(state)
         .layer(
             TraceLayer::new_for_http()
