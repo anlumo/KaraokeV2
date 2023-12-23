@@ -1,4 +1,5 @@
 use std::{
+    collections::HashMap,
     ffi::OsStr,
     net::{IpAddr, Ipv6Addr, SocketAddr},
     os::unix::ffi::OsStrExt,
@@ -13,18 +14,21 @@ use axum::{
         header::{CONTENT_LENGTH, CONTENT_TYPE},
         HeaderMap, StatusCode,
     },
-    routing::get,
-    Router,
+    routing::{get, post},
+    Json, Router,
 };
 use clap::Parser;
 use env_logger::Env;
-use r2d2::Pool;
-use r2d2_sqlite::{rusqlite::OpenFlags, SqliteConnectionManager};
+use rusqlite::{Connection, OpenFlags};
 use tokio::{fs::File, io::AsyncSeekExt};
 use tower_http::trace::{DefaultMakeSpan, TraceLayer};
 
-use crate::websocket::ws_handler;
+use crate::{
+    songs::{SearchIndex, Song},
+    websocket::ws_handler,
+};
 
+mod songs;
 mod websocket;
 
 #[derive(Parser, Debug)]
@@ -41,7 +45,8 @@ struct Args {
 }
 
 struct AppState {
-    db_pool: Pool<SqliteConnectionManager>,
+    song_covers: HashMap<i64, PathBuf>,
+    index: SearchIndex,
 }
 
 #[tokio::main]
@@ -59,15 +64,51 @@ async fn main() -> anyhow::Result<()> {
         8080,
     ));
 
-    let db_manager =
-        SqliteConnectionManager::file(args.db).with_flags(OpenFlags::SQLITE_OPEN_READ_ONLY);
-    let db_pool = Pool::new(db_manager)?;
+    log::info!("Loading song database...");
+    let song_db: Vec<Song>;
+    {
+        let mut conn = Connection::open_with_flags(args.db, OpenFlags::SQLITE_OPEN_READ_ONLY)?;
+        let tx = conn.transaction()?;
 
-    let state = Arc::new(AppState { db_pool });
+        let mut stmt = tx.prepare("SELECT rowid, path, title, artist, language, year, duration, lyrics, cover_path FROM song")?;
+        song_db = stmt
+            .query_map((), |row| {
+                let row_id = row.get("rowid")?;
+                let cover_path = row.get::<_, Option<Vec<u8>>>("cover_path")?;
+                Ok(Song {
+                    row_id,
+                    path: PathBuf::from(OsStr::from_bytes(&row.get::<_, Vec<u8>>("path")?)),
+                    title: row.get("title")?,
+                    artist: row.get("artist")?,
+                    language: row.get("language")?,
+                    year: row.get("year")?,
+                    duration: row.get("duration")?,
+                    lyrics: row.get("lyrics")?,
+                    cover_path: cover_path.map(|path| PathBuf::from(OsStr::from_bytes(&path))),
+                })
+            })?
+            .filter_map(|result| match result {
+                Ok(song) => Some(song),
+                Err(err) => {
+                    log::error!("Failed loading song: {err:?}");
+                    None
+                }
+            })
+            .collect();
+    }
+
+    let index = SearchIndex::new(song_db.iter())?;
+    let song_covers = song_db
+        .into_iter()
+        .filter_map(|song| song.cover_path.map(|cover_path| (song.row_id, cover_path)))
+        .collect();
+
+    let state = Arc::new(AppState { song_covers, index });
 
     let app = Router::new()
         .route("/", get(root))
         .route("/cover/:id", get(get_cover))
+        .route("/search", post(search))
         .route("/ws", get(ws_handler))
         .with_state(state)
         .layer(
@@ -87,24 +128,12 @@ async fn root() -> &'static str {
 
 async fn get_cover(
     State(state): State<Arc<AppState>>,
-    Path(song_id): Path<u32>,
+    Path(song_id): Path<i64>,
 ) -> Result<(HeaderMap, Body), StatusCode> {
-    let conn = state.db_pool.get().map_err(|err| {
-        log::error!("get_cover: {err:?}");
-        StatusCode::INTERNAL_SERVER_ERROR
-    })?;
-
-    let cover_path = conn
-        .query_row(
-            "SELECT cover_path FROM song WHERE rowid=?1",
-            (song_id,),
-            |f| f.get::<_, Vec<u8>>(0),
-        )
-        .map_err(|err| {
-            log::error!("get_cover: {err:?}");
-            StatusCode::INTERNAL_SERVER_ERROR
-        })?;
-    let cover_path = OsStr::from_bytes(&cover_path);
+    let cover_path = state.song_covers.get(&song_id);
+    let Some(cover_path) = cover_path else {
+        return Err(StatusCode::NOT_FOUND);
+    };
 
     let guess = mime_guess::from_path(cover_path).first_or(mime_guess::mime::IMAGE_JPEG);
     let mut file = File::open(cover_path).await.map_err(|err| {
@@ -129,4 +158,16 @@ async fn get_cover(
     headers.insert(CONTENT_LENGTH, file_length.to_string().parse().unwrap());
 
     Ok((headers, body))
+}
+
+async fn search(
+    State(state): State<Arc<AppState>>,
+    search_str: String,
+) -> Result<Json<Vec<serde_json::Value>>, StatusCode> {
+    log::debug!("Searching for {search_str:?}");
+    let result = state.index.search(&search_str).map_err(|err| {
+        log::error!("Search for {search_str:?} failed: {err:?}");
+        StatusCode::INTERNAL_SERVER_ERROR
+    })?;
+    Ok(Json(result))
 }
