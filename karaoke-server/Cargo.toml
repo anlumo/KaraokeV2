@@ -30,3 +30,4 @@ tracing = { version = "0.1.40", features = [
     "log",
     "log-always",
 ] }
+uuid = { version = "1.6.1", features = ["v4", "serde"] }

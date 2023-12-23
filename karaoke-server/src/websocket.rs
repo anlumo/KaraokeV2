@@ -1,23 +1,26 @@
-use std::net::SocketAddr;
+use std::{net::SocketAddr, sync::Arc};
 
 use axum::{
     extract::{
         ws::{Message, WebSocket},
-        ConnectInfo, WebSocketUpgrade,
+        ConnectInfo, State, WebSocketUpgrade,
     },
     response::IntoResponse,
 };
 use futures_util::{SinkExt, StreamExt};
 
+use crate::AppState;
+
 pub async fn ws_handler(
     ws: WebSocketUpgrade,
+    State(state): State<Arc<AppState>>,
     ConnectInfo(addr): ConnectInfo<SocketAddr>,
 ) -> impl IntoResponse {
     log::debug!("Websocket at {addr} connected.");
-    ws.on_upgrade(move |socket| handle_socket(socket, addr))
+    ws.on_upgrade(move |socket| handle_socket(socket, addr, state))
 }
 
-async fn handle_socket(socket: WebSocket, who: SocketAddr) {
+async fn handle_socket(socket: WebSocket, who: SocketAddr, state: Arc<AppState>) {
     let (mut sender, mut receiver) = socket.split();
 
     while let Some(msg) = receiver.next().await {

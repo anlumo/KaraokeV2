@@ -19,6 +19,7 @@ use axum::{
 };
 use clap::Parser;
 use env_logger::Env;
+use now_playing::Playlist;
 use rusqlite::{Connection, OpenFlags};
 use tokio::{fs::File, io::AsyncSeekExt};
 use tower_http::trace::{DefaultMakeSpan, TraceLayer};
@@ -28,6 +29,7 @@ use crate::{
     websocket::ws_handler,
 };
 
+mod now_playing;
 mod songs;
 mod websocket;
 
@@ -47,6 +49,7 @@ struct Args {
 struct AppState {
     song_covers: HashMap<i64, PathBuf>,
     index: SearchIndex,
+    playlist: Playlist,
 }
 
 #[tokio::main]
@@ -105,7 +108,13 @@ async fn main() -> anyhow::Result<()> {
         .filter_map(|song| song.cover_path.map(|cover_path| (song.row_id, cover_path)))
         .collect();
 
-    let state = Arc::new(AppState { song_covers, index });
+    let playlist = Playlist::default();
+
+    let state = Arc::new(AppState {
+        song_covers,
+        index,
+        playlist,
+    });
 
     let app = Router::new()
         .route("/", get(root))
