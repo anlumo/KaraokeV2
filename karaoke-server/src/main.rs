@@ -21,6 +21,8 @@ use env_logger::Env;
 use r2d2::Pool;
 use r2d2_sqlite::{rusqlite::OpenFlags, SqliteConnectionManager};
 use tokio::{fs::File, io::AsyncSeekExt};
+use tower_http::trace::{DefaultMakeSpan, TraceLayer};
+
 
 #[derive(Parser, Debug)]
 struct Args {
@@ -44,7 +46,7 @@ async fn main() -> anyhow::Result<()> {
     let args = Args::parse();
 
     if args.verbose {
-        env_logger::Builder::from_env(Env::default().default_filter_or("info")).init();
+        env_logger::Builder::from_env(Env::default().default_filter_or("debug")).init();
     } else {
         env_logger::init();
     }
@@ -63,7 +65,11 @@ async fn main() -> anyhow::Result<()> {
     let app = Router::new()
         .route("/", get(root))
         .route("/cover/:id", get(get_cover))
-        .with_state(state);
+        .with_state(state)
+        .layer(
+            TraceLayer::new_for_http()
+                .make_span_with(DefaultMakeSpan::default().include_headers(true)),
+        );
     log::info!("Listening on {address:?}");
     let listener = tokio::net::TcpListener::bind(address).await?;
     axum::serve(listener, app).await?;
