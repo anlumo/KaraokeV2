@@ -130,8 +130,7 @@ async fn get_cover(
     State(state): State<Arc<AppState>>,
     Path(song_id): Path<i64>,
 ) -> Result<(HeaderMap, Body), StatusCode> {
-    let cover_path = state.song_covers.get(&song_id);
-    let Some(cover_path) = cover_path else {
+    let Some(cover_path) = state.song_covers.get(&song_id) else {
         return Err(StatusCode::NOT_FOUND);
     };
 
