@@ -70,14 +70,15 @@ async fn main() -> anyhow::Result<()> {
         let mut conn = Connection::open_with_flags(args.db, OpenFlags::SQLITE_OPEN_READ_ONLY)?;
         let tx = conn.transaction()?;
 
-        let mut stmt = tx.prepare("SELECT rowid, path, title, artist, language, year, duration, lyrics, cover_path FROM song")?;
+        let mut stmt = tx.prepare(
+            "SELECT rowid, title, artist, language, year, duration, lyrics, cover_path FROM song",
+        )?;
         song_db = stmt
             .query_map((), |row| {
                 let row_id = row.get("rowid")?;
                 let cover_path = row.get::<_, Option<Vec<u8>>>("cover_path")?;
                 Ok(Song {
                     row_id,
-                    path: PathBuf::from(OsStr::from_bytes(&row.get::<_, Vec<u8>>("path")?)),
                     title: row.get("title")?,
                     artist: row.get("artist")?,
                     language: row.get("language")?,
@@ -85,6 +86,7 @@ async fn main() -> anyhow::Result<()> {
                     duration: row.get("duration")?,
                     lyrics: row.get("lyrics")?,
                     cover_path: cover_path.map(|path| PathBuf::from(OsStr::from_bytes(&path))),
+                    weight: None,
                 })
             })?
             .filter_map(|result| match result {
@@ -114,7 +116,8 @@ async fn main() -> anyhow::Result<()> {
         .layer(
             TraceLayer::new_for_http()
                 .make_span_with(DefaultMakeSpan::default().include_headers(true)),
-        );
+        )
+        .into_make_service_with_connect_info::<SocketAddr>();
     log::info!("Listening on {address:?}");
     let listener = tokio::net::TcpListener::bind(address).await?;
     axum::serve(listener, app).await?;
