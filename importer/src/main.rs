@@ -1,4 +1,6 @@
 use std::{
+    collections::HashSet,
+    ffi::OsStr,
     fs::read_dir,
     os::unix::ffi::OsStrExt,
     path::{Path, PathBuf},
@@ -17,7 +19,11 @@ struct Args {
     db: PathBuf,
 }
 
-fn parse_txt(path: impl AsRef<Path>, insert_stmt: &mut Statement<'_>) -> anyhow::Result<()> {
+fn parse_txt(
+    path: impl AsRef<Path>,
+    insert_stmt: &mut Statement<'_>,
+    inserted_set: &mut HashSet<PathBuf>,
+) -> anyhow::Result<()> {
     let full_path = path.as_ref().canonicalize()?;
     let song = loader::parse_txt_song(&path).map_err(|err| anyhow::anyhow!("{err:?}"))?;
 
@@ -44,7 +50,7 @@ fn parse_txt(path: impl AsRef<Path>, insert_stmt: &mut Statement<'_>) -> anyhow:
             _ => None,
         });
 
-    insert_stmt.execute((
+    let changes = insert_stmt.execute((
         full_path.as_os_str().as_bytes(),
         &song.header.title,
         &song.header.artist,
@@ -69,19 +75,29 @@ fn parse_txt(path: impl AsRef<Path>, insert_stmt: &mut Statement<'_>) -> anyhow:
         cover_path,
     ))?;
 
+    if changes == 1 {
+        inserted_set.insert(full_path);
+    } else {
+        eprintln!("{full_path:?}: Failed inserting into database");
+    }
+
     Ok(())
 }
 
-fn walk_dir(path: impl AsRef<Path>, insert_stmt: &mut Statement<'_>) -> anyhow::Result<()> {
+fn walk_dir(
+    path: impl AsRef<Path>,
+    insert_stmt: &mut Statement<'_>,
+    inserted_set: &mut HashSet<PathBuf>,
+) -> anyhow::Result<()> {
     for path in read_dir(path)? {
         let path = path?;
         if path.file_type()?.is_dir() {
             // song directory
-            walk_dir(path.path(), insert_stmt)?;
+            walk_dir(path.path(), insert_stmt, inserted_set)?;
         } else if path.file_type()?.is_file() {
             let file_path = path.path();
             if let Some(b"txt") = file_path.extension().map(|ext| ext.as_bytes()) {
-                if let Err(err) = parse_txt(&file_path, insert_stmt) {
+                if let Err(err) = parse_txt(&file_path, insert_stmt, inserted_set) {
                     eprintln!("{err}");
                 }
             }
@@ -118,8 +134,41 @@ fn main() -> anyhow::Result<()> {
 
     let tx = conn.transaction()?;
     {
-        let mut insert_stmt = tx.prepare("INSERT OR REPLACE INTO song (path, title, artist, language, year, duration, lyrics, cover_path) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)")?;
-        walk_dir(args.path, &mut insert_stmt)?;
+        let existing_songs: HashSet<_> = tx
+            .prepare("SELECT path FROM song")?
+            .query_map((), |row| {
+                row.get::<_, Vec<u8>>(0)
+                    .map(|bytes| PathBuf::from(OsStr::from_bytes(&bytes)))
+            })?
+            .collect::<Result<_, _>>()?;
+        let mut new_songs = HashSet::new();
+
+        let mut insert_stmt = tx.prepare(
+            r#"INSERT INTO song (path, title, artist, language, year, duration, lyrics, cover_path) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)
+            ON CONFLICT (path) DO UPDATE SET title=?2, artist=?3, language=?4, year=?5, duration=?6, lyrics=?7, cover_path=?8"#)?;
+        walk_dir(args.path, &mut insert_stmt, &mut new_songs)?;
+
+        let added = new_songs.difference(&existing_songs).count();
+        let removed: Vec<_> = existing_songs.difference(&new_songs).collect();
+
+        let removed_count = if removed.is_empty() {
+            0
+        } else {
+            println!("Trying to remove {} songs...", removed.len());
+            let mut remove_stmt = tx.prepare("DELETE FROM song WHERE path=?1")?;
+            removed
+                .into_iter()
+                .map(|path| remove_stmt.execute((path.as_os_str().as_bytes(),)))
+                .collect::<Result<Vec<_>, _>>()?
+                .into_iter()
+                .sum()
+        };
+
+        println!("{added} new songs, {removed_count} removed");
+        println!(
+            "Database now contains {} songs.",
+            existing_songs.len() - removed_count + added
+        );
     }
     tx.commit()?;
 
