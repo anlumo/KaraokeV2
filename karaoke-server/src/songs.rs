@@ -2,11 +2,13 @@ use std::path::PathBuf;
 
 use serde::Serialize;
 use tantivy::{
-    collector::TopDocs,
-    query::QueryParser,
+    collector::{Collector, TopDocs},
+    query::{AllQuery, Query, QueryParser},
     schema::{Field, Schema, INDEXED, STORED, STRING, TEXT},
-    Document, Index, IndexReader,
+    DocAddress, Document, Index, IndexReader,
 };
+
+use crate::Pagination;
 
 #[derive(Debug, Clone, Serialize)]
 pub struct Song {
@@ -100,13 +102,15 @@ impl SearchIndex {
         })
     }
 
-    pub fn search(&self, query: &str) -> tantivy::Result<Vec<serde_json::Value>> {
+    fn search_and_convert<C: Collector<Fruit = Vec<(f32, DocAddress)>>>(
+        &self,
+        query: &dyn Query,
+        collector: C,
+    ) -> tantivy::Result<Vec<serde_json::Value>> {
         let searcher = self.reader.searcher();
+        let results = searcher.search(query, &collector)?;
 
-        let query = self.query_parser.parse_query(query)?;
-        let top_songs = searcher.search(&query, &TopDocs::with_limit(50))?;
-
-        top_songs
+        results
             .into_iter()
             .map(|(weight, address)| {
                 let song = searcher.doc(address)?;
@@ -145,5 +149,20 @@ impl SearchIndex {
                 Ok(serde_json::to_value(song).unwrap())
             })
             .collect()
+    }
+
+    pub fn search(&self, query: &str) -> tantivy::Result<Vec<serde_json::Value>> {
+        self.search_and_convert(
+            &self.query_parser.parse_query(query)?,
+            TopDocs::with_limit(50),
+        )
+    }
+
+    pub fn all(&self, pagination: Pagination) -> tantivy::Result<Vec<serde_json::Value>> {
+        self.search_and_convert(
+            &AllQuery,
+            TopDocs::with_limit(pagination.per_page.min(100) as _)
+                .and_offset(pagination.offset as _),
+        )
     }
 }

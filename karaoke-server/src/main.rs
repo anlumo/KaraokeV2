@@ -9,7 +9,7 @@ use std::{
 
 use axum::{
     body::Body,
-    extract::{Path, State},
+    extract::{Path, Query, State},
     http::{
         header::{CONTENT_LENGTH, CONTENT_TYPE},
         HeaderMap, StatusCode,
@@ -21,6 +21,7 @@ use clap::Parser;
 use env_logger::Env;
 use now_playing::Playlist;
 use rusqlite::{Connection, OpenFlags};
+use serde::Deserialize;
 use tokio::{fs::File, io::AsyncSeekExt};
 use tower_http::trace::{DefaultMakeSpan, TraceLayer};
 
@@ -36,11 +37,14 @@ mod websocket;
 #[derive(Parser, Debug)]
 struct Args {
     /// The path to the sqlite database with the song information.
-    #[clap(short, long)]
+    #[clap(long)]
     db: PathBuf,
     /// The path to the persisted playlist file. Will be created if it doesn't exist.
-    #[clap(short, long)]
+    #[clap(long)]
     playlist: PathBuf,
+    /// The admin password for managing the playlist.
+    #[clap(long)]
+    password: String,
     /// The address and port to listen on (defaults to [::1]:8080).
     #[clap(short, long)]
     address: Option<SocketAddr>,
@@ -51,8 +55,10 @@ struct Args {
 
 struct AppState {
     song_covers: HashMap<i64, PathBuf>,
+    song_count: usize,
     index: SearchIndex,
     playlist: Playlist,
+    password: String,
 }
 
 #[tokio::main]
@@ -106,17 +112,19 @@ async fn main() -> anyhow::Result<()> {
     }
 
     let index = SearchIndex::new(song_db.iter())?;
+    let song_count = song_db.len();
+    let playlist = Playlist::load(args.playlist, song_db.iter().map(|song| song.row_id)).await?;
     let song_covers = song_db
         .into_iter()
         .filter_map(|song| song.cover_path.map(|cover_path| (song.row_id, cover_path)))
         .collect();
 
-    let playlist = Playlist::load(args.playlist).await?;
-
     let state = Arc::new(AppState {
         song_covers,
+        song_count,
         index,
         playlist,
+        password: args.password,
     });
 
     let app = Router::new()
@@ -124,6 +132,8 @@ async fn main() -> anyhow::Result<()> {
         .route("/song/:id", get(get_song))
         .route("/cover/:id", get(get_cover))
         .route("/search", post(search))
+        .route("/all_songs", get(get_all_songs))
+        .route("/song_count", get(get_song_count))
         .route("/ws", get(ws_handler))
         .with_state(state)
         .layer(
@@ -203,4 +213,25 @@ async fn search(
         (StatusCode::BAD_REQUEST, Body::from(format!("{err:?}")))
     })?;
     Ok(Json(result))
+}
+
+#[derive(Debug, Deserialize)]
+struct Pagination {
+    offset: u32,
+    per_page: u32,
+}
+
+async fn get_all_songs(
+    State(state): State<Arc<AppState>>,
+    Query(pagination): Query<Pagination>,
+) -> Result<Json<Vec<serde_json::Value>>, StatusCode> {
+    let result = state.index.all(pagination).map_err(|err| {
+        log::error!("Fetching all failed: {err:?}");
+        StatusCode::INTERNAL_SERVER_ERROR
+    })?;
+    Ok(Json(result))
+}
+
+async fn get_song_count(State(state): State<Arc<AppState>>) -> String {
+    state.song_count.to_string()
 }
