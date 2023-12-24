@@ -38,6 +38,9 @@ struct Args {
     /// The path to the sqlite database with the song information.
     #[clap(short, long)]
     db: PathBuf,
+    /// The path to the persisted playlist file. Will be created if it doesn't exist.
+    #[clap(short, long)]
+    playlist: PathBuf,
     /// The address and port to listen on (defaults to [::1]:8080).
     #[clap(short, long)]
     address: Option<SocketAddr>,
@@ -108,7 +111,7 @@ async fn main() -> anyhow::Result<()> {
         .filter_map(|song| song.cover_path.map(|cover_path| (song.row_id, cover_path)))
         .collect();
 
-    let playlist = Playlist::default();
+    let playlist = Playlist::load(args.playlist).await?;
 
     let state = Arc::new(AppState {
         song_covers,
