@@ -4,7 +4,7 @@ use serde::Serialize;
 use tantivy::{
     collector::TopDocs,
     query::QueryParser,
-    schema::{Field, Schema, STORED, STRING, TEXT},
+    schema::{Field, Schema, INDEXED, STORED, STRING, TEXT},
     Document, Index, IndexReader,
 };
 
@@ -42,7 +42,7 @@ pub struct SearchIndex {
 impl SearchIndex {
     pub fn new<'a>(input: impl IntoIterator<Item = &'a Song>) -> anyhow::Result<Self> {
         let mut schema_builder = Schema::builder();
-        let rowid_field = schema_builder.add_i64_field("rowid", STORED);
+        let rowid_field = schema_builder.add_i64_field("rowid", INDEXED | STORED);
         let title_field = schema_builder.add_text_field("title", TEXT | STORED);
         let artist_field = schema_builder.add_text_field("artist", TEXT | STORED);
         let language_field = schema_builder.add_text_field("language", STORED);

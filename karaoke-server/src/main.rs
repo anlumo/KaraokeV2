@@ -118,6 +118,7 @@ async fn main() -> anyhow::Result<()> {
 
     let app = Router::new()
         .route("/", get(root))
+        .route("/song/:id", get(get_song))
         .route("/cover/:id", get(get_cover))
         .route("/search", post(search))
         .route("/ws", get(ws_handler))
@@ -136,6 +137,24 @@ async fn main() -> anyhow::Result<()> {
 
 async fn root() -> &'static str {
     "Hello World"
+}
+
+async fn get_song(
+    State(state): State<Arc<AppState>>,
+    Path(song_id): Path<i64>,
+) -> Result<Json<serde_json::Value>, StatusCode> {
+    let result = state
+        .index
+        .search(&format!("rowid:{song_id}"))
+        .map_err(|err| {
+            log::error!("Search for song {song_id:?} failed: {err:?}");
+            StatusCode::INTERNAL_SERVER_ERROR
+        })?;
+    if let Some(song) = result.into_iter().next() {
+        Ok(Json(song))
+    } else {
+        Err(StatusCode::NOT_FOUND)
+    }
 }
 
 async fn get_cover(
@@ -174,11 +193,11 @@ async fn get_cover(
 async fn search(
     State(state): State<Arc<AppState>>,
     search_str: String,
-) -> Result<Json<Vec<serde_json::Value>>, StatusCode> {
+) -> Result<Json<Vec<serde_json::Value>>, (StatusCode, Body)> {
     log::debug!("Searching for {search_str:?}");
     let result = state.index.search(&search_str).map_err(|err| {
         log::error!("Search for {search_str:?} failed: {err:?}");
-        StatusCode::INTERNAL_SERVER_ERROR
+        (StatusCode::BAD_REQUEST, Body::from(format!("{err:?}")))
     })?;
     Ok(Json(result))
 }
