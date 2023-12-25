@@ -139,6 +139,7 @@ class PlaylistSongCard extends StatelessWidget {
           song: snapshot.data!,
           singer: entry.singer,
           api: api,
+          disabled: true,
         );
       },
     );
