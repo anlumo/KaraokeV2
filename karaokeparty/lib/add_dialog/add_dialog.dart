@@ -68,6 +68,7 @@ class _AddDialogState extends State<_AddDialog> {
           ),
           TextField(
             controller: _singerController,
+            autofocus: true,
             decoration: InputDecoration(
               labelText: context.t.search.addDialog.singerTextTitle,
             ),
