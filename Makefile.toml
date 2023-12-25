@@ -1,0 +1,24 @@
+[config]
+default_to_workspace = false
+
+[tasks.slang]
+script_runner = "@shell"
+script = '''
+cd karaokeparty
+# Generate structured language files
+dart run slang
+# Checks missing and unused translations
+dart run slang analyze
+'''
+
+[tasks.build-flutter]
+dependencies = ["slang"]
+script_runner = "@shell"
+script = '''
+cd karaokeparty
+flutter build web --web-renderer canvaskit
+'''
+
+[tasks.build-server]
+command = "cargo"
+args = ["build", "--bin", "karaoke-server", "--release"]

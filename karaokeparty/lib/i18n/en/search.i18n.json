@@ -1,0 +1,9 @@
+{
+    "randomPickButton": "Random pick",
+    "addDialog": {
+        "title": "Submit your song request",
+        "singerTextTitle": "Your name",
+        "submitButton": "Submit",
+        "cancelButton": "Cancel"
+    }
+}

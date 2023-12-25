@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:karaokeparty/browse/browse.dart';
+import 'package:karaokeparty/i18n/strings.g.dart';
 import 'package:karaokeparty/now_playing/now_playing.dart';
 import 'package:karaokeparty/playlist/playlist.dart';
 import 'package:karaokeparty/search/search.dart';
 
 void main() {
-  runApp(const MyApp());
+  runApp(TranslationProvider(child: const MyApp()));
 }
 
 class MyApp extends StatefulWidget {
@@ -33,7 +34,7 @@ class _MyAppState extends State<MyApp> {
         length: 3,
         child: Scaffold(
           appBar: AppBar(
-            title: const Text('Karaoke Party'),
+            title: Text(context.t.core.title),
             bottom: const TabBar(tabs: [
               Tab(icon: Icon(Icons.search)),
               Tab(icon: Icon(Icons.list)),

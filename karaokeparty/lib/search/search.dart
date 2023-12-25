@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:karaokeparty/add_dialog/add_dialog.dart';
+import 'package:karaokeparty/i18n/strings.g.dart';
+import 'package:karaokeparty/model/song.dart';
 
 class Search extends StatelessWidget {
   const Search({super.key});
@@ -22,8 +25,12 @@ class Search extends StatelessWidget {
               leading: const Icon(Icons.search),
               trailing: [
                 Tooltip(
-                  message: 'Random pick',
-                  child: IconButton(onPressed: () {}, icon: const Icon(Icons.casino)),
+                  message: context.t.search.randomPickButton,
+                  child: IconButton(
+                      onPressed: () {
+                        showAddSongDialog(context, Song.placeholder());
+                      },
+                      icon: const Icon(Icons.casino)),
                 ),
               ],
             ),
