@@ -1,4 +1,10 @@
 {
     "title": "Karaoke Party",
-    "songCardArtistYear": "$artist ($year)"
+    "songCardArtistYear": "$artist ($year)",
+    "connection": {
+        "connectingToServerOverlay": "Connecting...",
+        "connectionFailedError": "Connection failed",
+        "connectionRefusedError": "Connection refused",
+        "retryButton": "Try again"
+    }
 }
