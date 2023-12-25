@@ -135,7 +135,7 @@ class _MyAppState extends State<MyApp> {
                         children: [
                           Expanded(
                             child: TabBarView(children: [
-                              const Search(),
+                              Search(api: server),
                               const Browse(),
                               Playlist(
                                 songCache: songCache,

@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:karaokeparty/api/api.dart';
 import 'package:karaokeparty/i18n/strings.g.dart';
 import 'package:karaokeparty/model/song.dart';
 import 'package:karaokeparty/widgets/song_card.dart';
 import 'package:uuid/uuid.dart';
 
 class _AddDialog extends StatefulWidget {
-  const _AddDialog({required this.song, super.key});
+  const _AddDialog({required this.song, required this.api});
 
   final Song song;
+  final ServerApi api;
 
   @override
   State<_AddDialog> createState() => _AddDialogState();
@@ -27,7 +29,11 @@ class _AddDialogState extends State<_AddDialog> {
     return AlertDialog(
       title: Text(context.t.search.addDialog.title),
       actions: [
-        TextButton(onPressed: () {}, child: Text(context.t.search.addDialog.cancelButton)),
+        TextButton(
+            onPressed: () {
+              Navigator.of(context).pop(null);
+            },
+            child: Text(context.t.search.addDialog.cancelButton)),
         OutlinedButton(
           onPressed: _singerController.text.isNotEmpty ? () {} : null,
           child: Text(context.t.search.addDialog.submitButton),
@@ -42,7 +48,13 @@ class _AddDialogState extends State<_AddDialog> {
               Tooltip(
                 message: context.t.search.randomPickButton,
                 child: IconButton(
-                  onPressed: () {},
+                  onPressed: () async {
+                    Navigator.of(context).pop(null);
+                    final song = await widget.api.fetchRandomSong();
+                    if (song != null && context.mounted) {
+                      showAddSongDialog(context, song: song, api: widget.api);
+                    }
+                  },
                   icon: const Icon(Icons.casino),
                 ),
               ),
@@ -60,7 +72,12 @@ class _AddDialogState extends State<_AddDialog> {
   }
 }
 
-Future<UuidValue?> showAddSongDialog(BuildContext context, Song song) => showDialog<UuidValue>(
+Future<UuidValue?> showAddSongDialog(
+  BuildContext context, {
+  required Song song,
+  required ServerApi api,
+}) =>
+    showDialog<UuidValue>(
       context: context,
-      builder: (context) => _AddDialog(song: song),
+      builder: (context) => _AddDialog(song: song, api: api),
     );

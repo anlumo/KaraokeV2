@@ -2,10 +2,8 @@ import 'dart:convert';
 
 import 'package:karaokeparty/api/api.dart';
 import 'package:karaokeparty/model/song.dart';
-import 'package:http/http.dart' as http;
 
 final class SongCache {
-  final client = http.Client();
   final Map<int, Song?> _cache = {};
 
   Future<Song?> get(int id) async {
