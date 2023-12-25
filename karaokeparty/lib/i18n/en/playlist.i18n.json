@@ -1,3 +1,7 @@
 {
-    "nowPlayingTitle": "Now playing"
+    "nowPlayingTitle": "Now playing",
+    "lyricsDialog": {
+        "title": "Lyrics for $song",
+        "closeButton": "Close"
+    }
 }

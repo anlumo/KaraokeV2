@@ -6,6 +6,7 @@ import 'package:karaokeparty/i18n/strings.g.dart';
 import 'package:karaokeparty/main.dart';
 import 'package:karaokeparty/model/playlist_entry.dart';
 import 'package:karaokeparty/model/song.dart';
+import 'package:karaokeparty/widgets/lyrics.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 
 class SongCard extends StatelessWidget {
@@ -76,7 +77,11 @@ class SongCard extends StatelessWidget {
                 width: matchConstraint,
               ),
             if (song.lyrics != null)
-              IconButton(onPressed: () {}, icon: const Icon(Icons.lyrics))
+              IconButton(
+                      onPressed: () {
+                        showLyricsDialog(context, song);
+                      },
+                      icon: const Icon(Icons.lyrics))
                   .applyConstraint(right: coverImage.left.margin(8), top: parent.top.margin(8)),
           ],
         ),
