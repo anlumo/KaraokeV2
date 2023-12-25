@@ -94,7 +94,7 @@ class _SearchState extends State<Search> {
                     primary: true,
                     itemCount: snapshot.data!.length,
                     itemBuilder: (context, index) {
-                      return SongCard(song: snapshot.data![index]);
+                      return SongCard(song: snapshot.data![index], api: widget.api);
                     },
                   );
                 },

@@ -139,11 +139,13 @@ class _MyAppState extends State<MyApp> {
                               const Browse(),
                               Playlist(
                                 songCache: songCache,
+                                api: server,
                               ),
                             ]),
                           ),
                           NowPlaying(
                             songCache: songCache,
+                            api: server,
                           ),
                         ],
                       ),

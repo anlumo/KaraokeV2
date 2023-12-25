@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_constraintlayout/flutter_constraintlayout.dart';
+import 'package:karaokeparty/add_dialog/add_dialog.dart';
 import 'package:karaokeparty/api/api.dart';
 import 'package:karaokeparty/api/song_cache.dart';
 import 'package:karaokeparty/i18n/strings.g.dart';
@@ -10,12 +11,14 @@ import 'package:karaokeparty/widgets/lyrics.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 
 class SongCard extends StatelessWidget {
-  SongCard({required this.song, this.singer, super.key});
+  SongCard({required this.song, required this.api, this.singer, this.disabled = false, super.key});
 
   final Song song;
   final title = ConstraintId('title');
   final coverImage = ConstraintId('coverImage');
   final String? singer;
+  final ServerApi api;
+  final bool disabled;
 
   @override
   Widget build(BuildContext context) {
@@ -24,64 +27,72 @@ class SongCard extends StatelessWidget {
     return ConstrainedBox(
       constraints: const BoxConstraints(minWidth: 380.0, maxHeight: 96, minHeight: 96),
       child: Card(
-        child: ConstraintLayout(
-          showHelperWidgets: true,
-          children: [
-            Text(
-              song.title,
-              textAlign: TextAlign.start,
-              style: theme.textTheme.labelLarge!.copyWith(overflow: TextOverflow.ellipsis),
-            ).applyConstraint(
-              id: title,
-              centerLeftTo: parent.leftMargin(8),
-              right: coverImage.left.margin(8),
-              width: matchConstraint,
-            ),
-            Text(
-              song.year != null
-                  ? context.t.core.songCardArtistYear(artist: song.artist, year: song.year.toString())
-                  : song.artist,
-              textAlign: TextAlign.start,
-              style: theme.textTheme.labelMedium!.copyWith(overflow: TextOverflow.ellipsis),
-            ).applyConstraint(
-              left: title.left,
-              right: coverImage.left.margin(8),
-              width: matchConstraint,
-              bottom: parent.bottom.margin(8),
-            ),
-            Text(
-              '${song.duration ~/ 60}:${(song.duration % 60).round().toString().padLeft(2, '0')}',
-              textAlign: TextAlign.end,
-              style: theme.textTheme.labelSmall!.copyWith(overflow: TextOverflow.ellipsis),
-            ).applyConstraint(
-              right: coverImage.left.margin(8),
-              bottom: parent.bottom.margin(8),
-            ),
-            ((song.id == -1) ? const Placeholder() : Image.network('$serverApi/cover/${song.id}')).applyConstraint(
-              id: coverImage,
-              width: 80,
-              height: 80,
-              centerRightTo: parent.rightMargin(8),
-            ),
-            if (singer != null)
+        child: InkWell(
+          borderRadius: BorderRadius.circular(4),
+          onTap: disabled
+              ? null
+              : () {
+                  showAddSongDialog(context, song: song, api: api);
+                },
+          child: ConstraintLayout(
+            showHelperWidgets: true,
+            children: [
               Text(
-                singer!,
+                song.title,
                 textAlign: TextAlign.start,
-                style: theme.textTheme.labelLarge!
-                    .copyWith(overflow: TextOverflow.ellipsis, color: theme.colorScheme.primary),
+                style: theme.textTheme.labelLarge!.copyWith(overflow: TextOverflow.ellipsis),
               ).applyConstraint(
-                topLeftTo: parent.topMargin(8).leftMargin(8),
+                id: title,
+                centerLeftTo: parent.leftMargin(8),
                 right: coverImage.left.margin(8),
                 width: matchConstraint,
               ),
-            if (song.lyrics != null)
-              IconButton(
-                      onPressed: () {
-                        showLyricsDialog(context, song);
-                      },
-                      icon: const Icon(Icons.lyrics))
-                  .applyConstraint(right: coverImage.left.margin(8), top: parent.top.margin(8)),
-          ],
+              Text(
+                song.year != null
+                    ? context.t.core.songCardArtistYear(artist: song.artist, year: song.year.toString())
+                    : song.artist,
+                textAlign: TextAlign.start,
+                style: theme.textTheme.labelMedium!.copyWith(overflow: TextOverflow.ellipsis),
+              ).applyConstraint(
+                left: title.left,
+                right: coverImage.left.margin(8),
+                width: matchConstraint,
+                bottom: parent.bottom.margin(8),
+              ),
+              Text(
+                '${song.duration ~/ 60}:${(song.duration % 60).round().toString().padLeft(2, '0')}',
+                textAlign: TextAlign.end,
+                style: theme.textTheme.labelSmall!.copyWith(overflow: TextOverflow.ellipsis),
+              ).applyConstraint(
+                right: coverImage.left.margin(8),
+                bottom: parent.bottom.margin(8),
+              ),
+              ((song.id == -1) ? const Placeholder() : Image.network('$serverApi/cover/${song.id}')).applyConstraint(
+                id: coverImage,
+                width: 80,
+                height: 80,
+                centerRightTo: parent.rightMargin(8),
+              ),
+              if (singer != null)
+                Text(
+                  singer!,
+                  textAlign: TextAlign.start,
+                  style: theme.textTheme.labelLarge!
+                      .copyWith(overflow: TextOverflow.ellipsis, color: theme.colorScheme.primary),
+                ).applyConstraint(
+                  topLeftTo: parent.topMargin(8).leftMargin(8),
+                  right: coverImage.left.margin(8),
+                  width: matchConstraint,
+                ),
+              if (song.lyrics != null)
+                IconButton(
+                        onPressed: () {
+                          showLyricsDialog(context, song);
+                        },
+                        icon: const Icon(Icons.lyrics))
+                    .applyConstraint(right: coverImage.left.margin(8), top: parent.top.margin(8)),
+            ],
+          ),
         ),
       ),
     );
@@ -89,10 +100,16 @@ class SongCard extends StatelessWidget {
 }
 
 class PlaylistSongCard extends StatelessWidget {
-  const PlaylistSongCard({required this.songCache, required this.entry, super.key});
+  const PlaylistSongCard({
+    required this.songCache,
+    required this.entry,
+    required this.api,
+    super.key,
+  });
 
   final SongCache songCache;
   final PlaylistEntry entry;
+  final ServerApi api;
 
   @override
   Widget build(BuildContext context) {
@@ -108,6 +125,8 @@ class PlaylistSongCard extends StatelessWidget {
                 child: SongCard(
               song: Song.placeholder(),
               singer: entry.singer,
+              api: api,
+              disabled: true,
             )),
           );
         } else if (snapshot.data == null) {
@@ -119,6 +138,7 @@ class PlaylistSongCard extends StatelessWidget {
         return SongCard(
           song: snapshot.data!,
           singer: entry.singer,
+          api: api,
         );
       },
     );

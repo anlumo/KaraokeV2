@@ -44,7 +44,13 @@ class _AddDialogState extends State<_AddDialog> {
         children: [
           Row(
             children: [
-              Expanded(child: SongCard(song: widget.song)),
+              Expanded(
+                child: SongCard(
+                  song: widget.song,
+                  api: widget.api,
+                  disabled: true,
+                ),
+              ),
               Tooltip(
                 message: context.t.search.randomPickButton,
                 child: IconButton(

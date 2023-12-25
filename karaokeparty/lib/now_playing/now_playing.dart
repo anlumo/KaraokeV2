@@ -1,14 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:karaokeparty/api/api.dart';
 import 'package:karaokeparty/api/cubit/playlist_cubit.dart';
 import 'package:karaokeparty/api/song_cache.dart';
 import 'package:karaokeparty/i18n/strings.g.dart';
 import 'package:karaokeparty/widgets/song_card.dart';
 
 class NowPlaying extends StatelessWidget {
-  const NowPlaying({required this.songCache, super.key});
+  const NowPlaying({required this.songCache, required this.api, super.key});
 
   final SongCache songCache;
+  final ServerApi api;
 
   @override
   Widget build(BuildContext context) {
@@ -29,7 +31,7 @@ class NowPlaying extends StatelessWidget {
               if (snapshot.nowPlaying == null) {
                 return const SizedBox();
               }
-              return PlaylistSongCard(songCache: songCache, entry: snapshot.nowPlaying!);
+              return PlaylistSongCard(songCache: songCache, entry: snapshot.nowPlaying!, api: api);
             },
           ),
         ],
