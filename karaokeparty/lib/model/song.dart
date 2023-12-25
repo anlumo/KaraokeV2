@@ -25,4 +25,13 @@ final class Song {
         year = 1234,
         duration = 260.0,
         lyrics = null;
+
+  Song.fromJson(Map<String, dynamic> json)
+      : id = json['row_id'],
+        title = json['title'],
+        artist = json['artist'],
+        language = json['language'],
+        year = json['year'] as int?,
+        duration = json['duration'],
+        lyrics = json['lyrics'];
 }

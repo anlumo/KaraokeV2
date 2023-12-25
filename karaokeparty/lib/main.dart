@@ -1,5 +1,10 @@
+import 'dart:ffi';
+
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:karaokeparty/api/api.dart';
+import 'package:karaokeparty/api/cubit/playlist_cubit.dart';
+import 'package:karaokeparty/api/song_cache.dart';
 import 'package:karaokeparty/browse/browse.dart';
 import 'package:karaokeparty/i18n/strings.g.dart';
 import 'package:karaokeparty/now_playing/now_playing.dart';
@@ -32,7 +37,8 @@ class MyApp extends StatefulWidget {
 
 class _MyAppState extends State<MyApp> {
   bool isDark = false;
-  var server = ServerApi();
+  final server = ServerApi();
+  final songCache = SongCache();
 
   @override
   void initState() {
@@ -97,43 +103,50 @@ class _MyAppState extends State<MyApp> {
                   ],
                 );
               case ConnectedState():
-                return DefaultTabController(
-                  length: 3,
-                  child: Scaffold(
-                    appBar: AppBar(
-                      title: Text(context.t.core.title),
-                      bottom: const TabBar(tabs: [
-                        Tab(icon: Icon(Icons.search)),
-                        Tab(icon: Icon(Icons.list)),
-                        Tab(icon: Icon(Icons.mic_external_on)),
-                      ]),
-                      actions: [
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                          child: IconButton(
-                            onPressed: () {
-                              setState(() {
-                                isDark = !isDark;
-                              });
-                            },
-                            isSelected: isDark,
-                            icon: const Icon(Icons.wb_sunny_outlined),
-                            selectedIcon: const Icon(Icons.brightness_2_outlined),
+                return BlocProvider.value(
+                  value: server.playlist,
+                  child: DefaultTabController(
+                    length: 3,
+                    child: Scaffold(
+                      appBar: AppBar(
+                        title: Text(context.t.core.title),
+                        bottom: const TabBar(tabs: [
+                          Tab(icon: Icon(Icons.search)),
+                          Tab(icon: Icon(Icons.list)),
+                          Tab(icon: Icon(Icons.mic_external_on)),
+                        ]),
+                        actions: [
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                            child: IconButton(
+                              onPressed: () {
+                                setState(() {
+                                  isDark = !isDark;
+                                });
+                              },
+                              isSelected: isDark,
+                              icon: const Icon(Icons.wb_sunny_outlined),
+                              selectedIcon: const Icon(Icons.brightness_2_outlined),
+                            ),
                           ),
-                        ),
-                      ],
-                    ),
-                    body: const Column(
-                      children: [
-                        Expanded(
-                          child: TabBarView(children: [
-                            Search(),
-                            Browse(),
-                            Playlist(),
-                          ]),
-                        ),
-                        NowPlaying(),
-                      ],
+                        ],
+                      ),
+                      body: Column(
+                        children: [
+                          Expanded(
+                            child: TabBarView(children: [
+                              const Search(),
+                              const Browse(),
+                              Playlist(
+                                songCache: songCache,
+                              ),
+                            ]),
+                          ),
+                          NowPlaying(
+                            songCache: songCache,
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 );
