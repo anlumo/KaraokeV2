@@ -24,6 +24,13 @@ class _AddDialogState extends State<_AddDialog> {
     _singerController.addListener(() => setState(() {}));
   }
 
+  Future<void> _submit(BuildContext context) async {
+    await widget.api.submitSong(singer: _singerController.text, songId: widget.song.id);
+    if (context.mounted) {
+      Navigator.of(context).pop(null);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
@@ -35,7 +42,7 @@ class _AddDialogState extends State<_AddDialog> {
             },
             child: Text(context.t.search.addDialog.cancelButton)),
         OutlinedButton(
-          onPressed: _singerController.text.isNotEmpty ? () {} : null,
+          onPressed: _singerController.text.isNotEmpty ? () => _submit(context) : null,
           child: Text(context.t.search.addDialog.submitButton),
         ),
       ],
@@ -72,6 +79,7 @@ class _AddDialogState extends State<_AddDialog> {
             decoration: InputDecoration(
               labelText: context.t.search.addDialog.singerTextTitle,
             ),
+            onSubmitted: (text) => _submit(context),
           ),
         ],
       ),

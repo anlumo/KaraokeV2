@@ -1,9 +1,7 @@
-import 'dart:ffi';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:karaokeparty/api/api.dart';
-import 'package:karaokeparty/api/cubit/playlist_cubit.dart';
+import 'package:karaokeparty/api/cubit/connection_cubit.dart';
 import 'package:karaokeparty/api/song_cache.dart';
 import 'package:karaokeparty/browse/browse.dart';
 import 'package:karaokeparty/i18n/strings.g.dart';
@@ -57,10 +55,12 @@ class _MyAppState extends State<MyApp> {
         brightness: isDark ? Brightness.dark : Brightness.light,
       ),
       debugShowCheckedModeBanner: false,
-      home: StreamBuilder(
-          stream: server.connectedController.stream,
-          builder: (context, snapshot) {
-            if (!snapshot.hasData || snapshot.data is ConnectingState) {
+      home: BlocBuilder(
+        bloc: server.connectionCubit,
+        builder: (context, snapshot) {
+          switch (snapshot) {
+            case InitialConnectionState():
+            case ConnectingState():
               final theme = Theme.of(context);
               return ColoredBox(
                 color: theme.colorScheme.background,
@@ -85,75 +85,73 @@ class _MyAppState extends State<MyApp> {
                   ),
                 )),
               );
-            }
-            switch (snapshot.data!) {
-              case ConnectingState(): // can't happen
-                throw '';
-              case ConnectionFailedState():
-                return AlertDialog(
-                  title: Text(context.t.core.connection.connectionFailedError),
-                  content: Text((snapshot.data! as ConnectionFailedState).description(context)),
-                  actions: [
-                    TextButton(
-                      onPressed: () {
-                        server.connect();
-                      },
-                      child: Text(context.t.core.connection.retryButton),
+            case ConnectionFailedState():
+              return AlertDialog(
+                title: Text(context.t.core.connection.connectionFailedError),
+                content: Text(snapshot.description(context)),
+                actions: [
+                  TextButton(
+                    onPressed: () {
+                      server.connectionCubit.connect(server.playlist);
+                    },
+                    child: Text(context.t.core.connection.retryButton),
+                  ),
+                ],
+              );
+            case ConnectedState():
+              return BlocProvider.value(
+                value: server.playlist,
+                child: DefaultTabController(
+                  length: 3,
+                  child: Scaffold(
+                    appBar: AppBar(
+                      title: Text(context.t.core.title),
+                      bottom: const TabBar(tabs: [
+                        Tab(icon: Icon(Icons.search)),
+                        Tab(icon: Icon(Icons.library_music)),
+                        Tab(icon: Icon(Icons.mic_external_on)),
+                      ]),
+                      actions: [
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                          child: IconButton(
+                            onPressed: () {
+                              setState(() {
+                                isDark = !isDark;
+                              });
+                            },
+                            isSelected: isDark,
+                            icon: const Icon(Icons.wb_sunny_outlined),
+                            selectedIcon: const Icon(Icons.brightness_2_outlined),
+                          ),
+                        ),
+                      ],
                     ),
-                  ],
-                );
-              case ConnectedState():
-                return BlocProvider.value(
-                  value: server.playlist,
-                  child: DefaultTabController(
-                    length: 3,
-                    child: Scaffold(
-                      appBar: AppBar(
-                        title: Text(context.t.core.title),
-                        bottom: const TabBar(tabs: [
-                          Tab(icon: Icon(Icons.search)),
-                          Tab(icon: Icon(Icons.library_music)),
-                          Tab(icon: Icon(Icons.mic_external_on)),
-                        ]),
-                        actions: [
-                          Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                            child: IconButton(
-                              onPressed: () {
-                                setState(() {
-                                  isDark = !isDark;
-                                });
-                              },
-                              isSelected: isDark,
-                              icon: const Icon(Icons.wb_sunny_outlined),
-                              selectedIcon: const Icon(Icons.brightness_2_outlined),
+                    body: Column(
+                      children: [
+                        Expanded(
+                          child: TabBarView(children: [
+                            Search(api: server),
+                            const Browse(),
+                            Playlist(
+                              songCache: songCache,
+                              api: server,
                             ),
-                          ),
-                        ],
-                      ),
-                      body: Column(
-                        children: [
-                          Expanded(
-                            child: TabBarView(children: [
-                              Search(api: server),
-                              const Browse(),
-                              Playlist(
-                                songCache: songCache,
-                                api: server,
-                              ),
-                            ]),
-                          ),
-                          NowPlaying(
-                            songCache: songCache,
-                            api: server,
-                          ),
-                        ],
-                      ),
+                          ]),
+                        ),
+                        NowPlaying(
+                          songCache: songCache,
+                          api: server,
+                        ),
+                      ],
                     ),
                   ),
-                );
-            }
-          }),
+                ),
+              );
+          }
+          return const SizedBox();
+        },
+      ),
     );
   }
 }
