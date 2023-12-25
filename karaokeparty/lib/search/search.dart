@@ -20,6 +20,12 @@ class Search extends StatelessWidget {
                 controller.openView();
               },
               leading: const Icon(Icons.search),
+              trailing: [
+                Tooltip(
+                  message: 'Random pick',
+                  child: IconButton(onPressed: () {}, icon: const Icon(Icons.casino)),
+                ),
+              ],
             ),
             suggestionsBuilder: (context, controller) => List<ListTile>.generate(5, (int index) {
               final item = 'item $index';
