@@ -56,12 +56,14 @@ class SongCard extends StatelessWidget {
               right: coverImage.left.margin(8),
               bottom: parent.bottom.margin(8),
             ),
-            Image.network('$serverApi/cover/${song.id}').applyConstraint(
-              id: coverImage,
-              width: 80,
-              height: 80,
-              centerRightTo: parent.rightMargin(8),
-            ),
+            (song.id == -1)
+                ? const Placeholder()
+                : Image.network('$serverApi/cover/${song.id}').applyConstraint(
+                    id: coverImage,
+                    width: 80,
+                    height: 80,
+                    centerRightTo: parent.rightMargin(8),
+                  ),
             if (singer != null)
               Text(
                 singer!,
@@ -73,6 +75,9 @@ class SongCard extends StatelessWidget {
                 right: coverImage.left.margin(8),
                 width: matchConstraint,
               ),
+            if (song.lyrics != null)
+              IconButton(onPressed: () {}, icon: const Icon(Icons.lyrics))
+                  .applyConstraint(right: coverImage.left.margin(8), top: parent.top.margin(8)),
           ],
         ),
       ),

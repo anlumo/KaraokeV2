@@ -18,7 +18,7 @@ final class Song {
   });
 
   Song.placeholder()
-      : id = 123,
+      : id = -1,
         title = 'Let\'s meet at the FooBar sdflkj sdalf ldsjf lksdjf klsjdflsjldkfjlsdj',
         artist = 'Foo Fighters',
         language = null,
