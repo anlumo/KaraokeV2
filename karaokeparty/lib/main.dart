@@ -112,7 +112,7 @@ class _MyAppState extends State<MyApp> {
                         title: Text(context.t.core.title),
                         bottom: const TabBar(tabs: [
                           Tab(icon: Icon(Icons.search)),
-                          Tab(icon: Icon(Icons.list)),
+                          Tab(icon: Icon(Icons.library_music)),
                           Tab(icon: Icon(Icons.mic_external_on)),
                         ]),
                         actions: [
