@@ -53,7 +53,18 @@ final class ServerApi {
   }
 
   Future<UuidValue?> submitSong({required String singer, required int songId}) async {
-    // switch ()
+    switch (connectionCubit.state) {
+      case InitialConnectionState():
+      case ConnectingState():
+      case ConnectionFailedState():
+        return null;
+      case ConnectedState(:final sink):
+        sink.add(jsonEncode({
+          'cmd': 'add',
+          'song': songId,
+          'singer': singer,
+        }));
+    }
     return null;
   }
 }

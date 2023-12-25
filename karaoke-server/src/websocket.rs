@@ -73,11 +73,7 @@ async fn handle_socket(socket: WebSocket, who: SocketAddr, state: Arc<AppState>)
                                             sender.send(Message::Binary(vec![authenticated as u8])).await.map_err(anyhow::Error::from)
                                         }
                                         Command::Add { song, singer } => {
-                                            match state.playlist.add(song, singer).await {
-                                                Ok(id) => sender.send(Message::Text(id.map(|id| id.to_string()).unwrap_or_else(|| "null".to_owned()))).await
-                                                    .map_err(anyhow::Error::from),
-                                                Err(err) => Err(err),
-                                            }
+                                            state.playlist.add(song, singer).await.map(|_| ())
                                         }
                                         Command::Play { id } if authenticated => {
                                             state.playlist.play(id).await.map(|_| ())

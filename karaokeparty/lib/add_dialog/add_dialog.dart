@@ -27,7 +27,7 @@ class _AddDialogState extends State<_AddDialog> {
   Future<void> _submit(BuildContext context) async {
     await widget.api.submitSong(singer: _singerController.text, songId: widget.song.id);
     if (context.mounted) {
-      Navigator.of(context).pop(null);
+      Navigator.of(context).pop();
     }
   }
 
@@ -38,7 +38,7 @@ class _AddDialogState extends State<_AddDialog> {
       actions: [
         TextButton(
             onPressed: () {
-              Navigator.of(context).pop(null);
+              Navigator.of(context).pop();
             },
             child: Text(context.t.search.addDialog.cancelButton)),
         OutlinedButton(
@@ -62,7 +62,7 @@ class _AddDialogState extends State<_AddDialog> {
                 message: context.t.search.randomPickButton,
                 child: IconButton(
                   onPressed: () async {
-                    Navigator.of(context).pop(null);
+                    Navigator.of(context).pop();
                     final song = await widget.api.fetchRandomSong();
                     if (song != null && context.mounted) {
                       showAddSongDialog(context, song: song, api: widget.api);
@@ -87,7 +87,7 @@ class _AddDialogState extends State<_AddDialog> {
   }
 }
 
-Future<UuidValue?> showAddSongDialog(
+Future<void> showAddSongDialog(
   BuildContext context, {
   required Song song,
   required ServerApi api,
