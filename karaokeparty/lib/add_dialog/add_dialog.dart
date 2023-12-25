@@ -3,6 +3,7 @@ import 'package:karaokeparty/api/api.dart';
 import 'package:karaokeparty/i18n/strings.g.dart';
 import 'package:karaokeparty/model/song.dart';
 import 'package:karaokeparty/widgets/song_card.dart';
+import 'package:rounded_loading_button/rounded_loading_button.dart';
 import 'package:uuid/uuid.dart';
 
 class _AddDialog extends StatefulWidget {
@@ -17,6 +18,8 @@ class _AddDialog extends StatefulWidget {
 
 class _AddDialogState extends State<_AddDialog> {
   final _singerController = TextEditingController();
+  final _submitButtonController = RoundedLoadingButtonController();
+  var submitting = false;
 
   @override
   void initState() {
@@ -26,13 +29,28 @@ class _AddDialogState extends State<_AddDialog> {
 
   Future<void> _submit(BuildContext context) async {
     await widget.api.submitSong(singer: _singerController.text, songId: widget.song.id);
+    _submitButtonController.success();
     if (context.mounted) {
       Navigator.of(context).pop();
     }
   }
 
+  Size _textSize(String text, TextStyle style) {
+    final TextPainter textPainter =
+        TextPainter(text: TextSpan(text: text, style: style), maxLines: 1, textDirection: TextDirection.ltr)
+          ..layout(minWidth: 0, maxWidth: double.infinity);
+    return textPainter.size;
+  }
+
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    final submitButtonTextSize = _textSize(
+      context.t.search.addDialog.submitButton,
+      theme.textTheme.labelLarge!,
+    );
+
     return AlertDialog(
       title: Text(context.t.search.addDialog.title),
       actions: [
@@ -41,9 +59,20 @@ class _AddDialogState extends State<_AddDialog> {
               Navigator.of(context).pop();
             },
             child: Text(context.t.search.addDialog.cancelButton)),
-        OutlinedButton(
-          onPressed: _singerController.text.isNotEmpty ? () => _submit(context) : null,
-          child: Text(context.t.search.addDialog.submitButton),
+        SizedBox(
+          width: submitButtonTextSize.width + 64,
+          child: RoundedLoadingButton(
+            controller: _submitButtonController,
+            color: theme.colorScheme.primary,
+            onPressed: !submitting && _singerController.text.isNotEmpty ? () => _submit(context) : null,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 32),
+              child: Text(
+                context.t.search.addDialog.submitButton,
+                style: theme.textTheme.labelLarge!.copyWith(color: theme.colorScheme.onPrimary),
+              ),
+            ),
+          ),
         ),
       ],
       content: Column(
