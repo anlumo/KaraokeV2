@@ -54,22 +54,28 @@ class _PlaylistState extends State<Playlist> {
                                 builder: (context, child) {
                                   final listItem = Row(
                                     children: [
-                                      IconButton(
-                                          onPressed: () {
-                                            connectionState.play(item.id);
-                                          },
-                                          icon: const Icon(Icons.play_arrow)),
+                                      Tooltip(
+                                        message: context.t.playlist.playTooltip,
+                                        child: IconButton(
+                                            onPressed: () {
+                                              connectionState.play(item.id);
+                                            },
+                                            icon: const Icon(Icons.play_arrow)),
+                                      ),
                                       Expanded(
                                           child: PlaylistSongCard(
                                               songCache: widget.songCache, entry: item, api: widget.api)),
-                                      SizeFadeTransition(
-                                        animation: itemAnimation,
-                                        child: Handle(
-                                          delay: const Duration(milliseconds: 600),
-                                          child: Container(
-                                            height: 120,
-                                            padding: const EdgeInsets.symmetric(horizontal: 8),
-                                            child: const Icon(Icons.menu),
+                                      Tooltip(
+                                        message: context.t.playlist.rearrangeTooltip,
+                                        child: SizeFadeTransition(
+                                          animation: itemAnimation,
+                                          child: Handle(
+                                            delay: const Duration(milliseconds: 600),
+                                            child: Container(
+                                              height: 120,
+                                              padding: const EdgeInsets.symmetric(horizontal: 8),
+                                              child: const Icon(Icons.menu),
+                                            ),
                                           ),
                                         ),
                                       ),

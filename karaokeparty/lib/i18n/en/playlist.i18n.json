@@ -4,5 +4,7 @@
         "title": "Lyrics for $song",
         "closeButton": "Close"
     },
-    "deleteLabel": "Delete"
+    "deleteLabel": "Delete",
+    "playTooltip": "Play",
+    "rearrangeTooltip": "Hold to start rearranging"
 }
