@@ -17,7 +17,7 @@ class ConnectionCubit extends Cubit<ConnectionState> {
   ConnectionCubit() : super(const InitialConnectionState());
 
   Future<void> connect(PlaylistCubit playlist) async {
-    final wsUrl = Uri.parse('ws://localhost:8080/ws');
+    final wsUrl = Uri.parse('ws://$serverHost/ws');
     log.d('Connecting to $wsUrl...');
     emit(const ConnectingState());
     final channel = WebSocketChannel.connect(wsUrl);

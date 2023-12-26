@@ -67,7 +67,10 @@ class SongCard extends StatelessWidget {
                 right: coverImage.left.margin(8),
                 bottom: parent.bottom.margin(8),
               ),
-              ((song.id == -1) ? const Placeholder() : Image.network('$serverApi/cover/${song.id}')).applyConstraint(
+              ((song.coverPath == null)
+                      ? const Placeholder()
+                      : Image.network('http://$serverHost/cover/${song.coverPath}'))
+                  .applyConstraint(
                 id: coverImage,
                 width: 80,
                 height: 80,

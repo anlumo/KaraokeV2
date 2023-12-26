@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:math';
 
 import 'package:karaokeparty/api/cubit/connection_cubit.dart';
 import 'package:karaokeparty/api/cubit/playlist_cubit.dart';
@@ -8,9 +7,9 @@ import 'package:karaokeparty/model/song.dart';
 import 'package:uuid/uuid.dart';
 import 'package:http/http.dart' as http;
 
-const serverApi = 'http://localhost:8080';
+const serverHost = 'localhost:8080';
+const serverApi = 'http://$serverHost/api';
 final client = http.Client();
-final random = Random();
 
 final class ServerApi {
   final connectionCubit = ConnectionCubit();
@@ -19,6 +18,11 @@ final class ServerApi {
   Future<void> connect() {
     return connectionCubit.connect(playlist);
   }
+
+  int? get songCount => switch (connectionCubit.state) {
+        InitialConnectionState() || ConnectingState() || ConnectionFailedState() => null,
+        ConnectedState(:final songCount) => songCount,
+      };
 
   Future<List<Song>> search(String text) async {
     final response = await client.post(Uri.parse('$serverApi/search'), body: utf8.encode(text));
@@ -29,6 +33,15 @@ final class ServerApi {
     return (jsonDecode(json) as List<dynamic>)
         .map((song) => Song.fromJson(song as Map<String, dynamic>))
         .toList(growable: false);
+  }
+
+  Future<List<Song>?> fetchSongs(int offset, int perPage) async {
+    final response = await client.get(Uri.parse('$serverApi/all_songs?offset=$offset&per_page=$perPage'));
+    if (response.statusCode != 200) {
+      return null;
+    }
+    final json = utf8.decode(response.bodyBytes);
+    return (jsonDecode(json) as List<dynamic>).map((song) => Song.fromJson(song)).toList(growable: false);
   }
 
   Future<Song?> fetchSongByOffset(int offset) async {

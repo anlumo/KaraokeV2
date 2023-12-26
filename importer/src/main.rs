@@ -17,10 +17,15 @@ struct Args {
     /// The path to the sqlite database to write the output to. Will be created if it doesn't exist.
     #[clap(short, long)]
     db: PathBuf,
+
+    /// How many path components to remove from cover paths to match the web server configuration.
+    #[clap(short, long, default_value_t = 0)]
+    strip_components: usize,
 }
 
 fn parse_txt(
     path: impl AsRef<Path>,
+    strip_components: usize,
     insert_stmt: &mut Statement<'_>,
     inserted_set: &mut HashSet<PathBuf>,
 ) -> anyhow::Result<()> {
@@ -43,7 +48,13 @@ fn parse_txt(
     };
 
     let cover_path = song.header.cover_path.map(|cover_path| match cover_path {
-        Source::Local(cover_path) => cover_path.as_os_str().as_bytes().to_owned(),
+        Source::Local(cover_path) => cover_path
+            .components()
+            .skip(strip_components)
+            .collect::<PathBuf>()
+            .as_os_str()
+            .as_bytes()
+            .to_owned(),
         _ => panic!("Song {} has remote cover", song.header.title),
     });
 
@@ -85,6 +96,7 @@ fn parse_txt(
 
 fn walk_dir(
     path: impl AsRef<Path>,
+    strip_components: usize,
     insert_stmt: &mut Statement<'_>,
     inserted_set: &mut HashSet<PathBuf>,
 ) -> anyhow::Result<()> {
@@ -92,11 +104,12 @@ fn walk_dir(
         let path = path?;
         if path.file_type()?.is_dir() {
             // song directory
-            walk_dir(path.path(), insert_stmt, inserted_set)?;
+            walk_dir(path.path(), strip_components, insert_stmt, inserted_set)?;
         } else if path.file_type()?.is_file() {
             let file_path = path.path();
             if let Some(b"txt") = file_path.extension().map(|ext| ext.as_bytes()) {
-                if let Err(err) = parse_txt(&file_path, insert_stmt, inserted_set) {
+                if let Err(err) = parse_txt(&file_path, strip_components, insert_stmt, inserted_set)
+                {
                     eprintln!("{err}");
                 }
             }
@@ -145,7 +158,12 @@ fn main() -> anyhow::Result<()> {
         let mut insert_stmt = tx.prepare(
             r#"INSERT INTO song (path, title, artist, language, year, duration, lyrics, cover_path) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)
             ON CONFLICT (path) DO UPDATE SET title=?2, artist=?3, language=?4, year=?5, duration=?6, lyrics=?7, cover_path=?8"#)?;
-        walk_dir(args.path, &mut insert_stmt, &mut new_songs)?;
+        walk_dir(
+            args.path,
+            args.strip_components,
+            &mut insert_stmt,
+            &mut new_songs,
+        )?;
 
         let added = new_songs.difference(&existing_songs).count();
         let removed: Vec<_> = existing_songs.difference(&new_songs).collect();

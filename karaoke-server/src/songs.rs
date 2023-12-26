@@ -1,5 +1,3 @@
-use std::path::PathBuf;
-
 use serde::Serialize;
 use tantivy::{
     collector::{Collector, TopDocs},
@@ -22,8 +20,8 @@ pub struct Song {
     pub duration: f64,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub lyrics: Option<String>,
-    #[serde(default, skip)]
-    pub cover_path: Option<PathBuf>,
+    #[serde(default)]
+    pub cover_path: Option<String>,
 }
 
 pub struct SearchIndex {
@@ -34,6 +32,7 @@ pub struct SearchIndex {
     year_field: Field,
     lyrics_field: Field,
     duration_field: Field,
+    cover_field: Field,
 
     reader: IndexReader,
     query_parser: QueryParser,
@@ -50,6 +49,7 @@ impl SearchIndex {
         let year_field = schema_builder.add_text_field("year", STRING | STORED);
         let lyrics_field = schema_builder.add_text_field("lyrics", TEXT | STORED);
         let duration_field = schema_builder.add_f64_field("duration", STORED);
+        let cover_field = schema_builder.add_text_field("cover", STORED);
         let schema = schema_builder.build();
 
         let mut index = Index::builder()
@@ -82,6 +82,9 @@ impl SearchIndex {
             if let Some(song_lyrics) = &song.lyrics {
                 doc.add_text(lyrics_field, song_lyrics);
             }
+            if let Some(cover) = &song.cover_path {
+                doc.add_text(cover_field, cover);
+            }
             index_writer.add_document(doc)?;
         }
 
@@ -106,6 +109,7 @@ impl SearchIndex {
             year_field,
             lyrics_field,
             duration_field,
+            cover_field,
             reader,
             query_parser,
         })
@@ -152,7 +156,9 @@ impl SearchIndex {
                     lyrics: song
                         .get_first(self.lyrics_field)
                         .map(|lyrics| lyrics.as_text().unwrap().to_owned()),
-                    cover_path: None,
+                    cover_path: song
+                        .get_first(self.cover_field)
+                        .map(|cover| cover.as_text().unwrap().to_owned()),
                 };
                 Ok(serde_json::to_value(song).unwrap())
             })
@@ -188,4 +194,18 @@ impl SearchIndex {
             .filter_map(|result| result.transpose())
             .collect()
     }
+}
+
+pub fn urlencode_path(path_bytes: impl IntoIterator<Item = u8>) -> String {
+    let mut encoded = String::new();
+
+    for b in path_bytes {
+        if b.is_ascii_alphanumeric() || b"-._~/".contains(&b) {
+            encoded.push(b as char);
+        } else {
+            encoded.push_str(&format!("%{:02X}", b));
+        }
+    }
+
+    encoded
 }

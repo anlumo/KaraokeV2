@@ -1,19 +1,13 @@
 use std::{
-    collections::HashMap,
-    ffi::OsStr,
     net::{IpAddr, Ipv6Addr, SocketAddr},
-    os::unix::ffi::OsStrExt,
     path::PathBuf,
     sync::Arc,
 };
 
 use axum::{
     body::Body,
-    extract::{Path, Query, State},
-    http::{
-        header::{CONTENT_LENGTH, CONTENT_TYPE},
-        HeaderMap, StatusCode,
-    },
+    extract::{Query, State},
+    http::StatusCode,
     routing::{get, post},
     Json, Router,
 };
@@ -23,11 +17,13 @@ use now_playing::Playlist;
 use rand::Rng;
 use rusqlite::{Connection, OpenFlags};
 use serde::Deserialize;
-use tokio::{fs::File, io::AsyncSeekExt};
-use tower_http::trace::{DefaultMakeSpan, TraceLayer};
+use tower_http::{
+    services::ServeDir,
+    trace::{DefaultMakeSpan, TraceLayer},
+};
 
 use crate::{
-    songs::{SearchIndex, Song},
+    songs::{urlencode_path, SearchIndex, Song},
     websocket::ws_handler,
 };
 
@@ -52,10 +48,12 @@ struct Args {
     /// Verbose logging to stderr (read https://crates.io/crates/env_logger for more detailed configuration).
     #[clap(short, long)]
     verbose: bool,
+    /// Path to the directory structure for the covers.
+    #[clap(short, long)]
+    cover_path: PathBuf,
 }
 
 struct AppState {
-    song_covers: HashMap<i64, PathBuf>,
     song_count: usize,
     index: SearchIndex,
     playlist: Playlist,
@@ -98,7 +96,7 @@ async fn main() -> anyhow::Result<()> {
                     year: row.get("year")?,
                     duration: row.get("duration")?,
                     lyrics: row.get("lyrics")?,
-                    cover_path: cover_path.map(|path| PathBuf::from(OsStr::from_bytes(&path))),
+                    cover_path: cover_path.map(urlencode_path),
                 })
             })?
             .filter_map(|result| match result {
@@ -114,13 +112,8 @@ async fn main() -> anyhow::Result<()> {
     let index = SearchIndex::new(song_db.iter())?;
     let song_count = song_db.len();
     let playlist = Playlist::load(args.playlist, song_db.iter().map(|song| song.row_id)).await?;
-    let song_covers = song_db
-        .into_iter()
-        .filter_map(|song| song.cover_path.map(|cover_path| (song.row_id, cover_path)))
-        .collect();
 
     let state = Arc::new(AppState {
-        song_covers,
         song_count,
         index,
         playlist,
@@ -129,13 +122,13 @@ async fn main() -> anyhow::Result<()> {
 
     let app = Router::new()
         .route("/", get(root))
-        .route("/song", get(get_song))
-        .route("/cover/:id", get(get_cover))
-        .route("/search", post(search))
-        .route("/all_songs", get(get_all_songs))
-        .route("/random_songs", get(get_random_songs))
-        .route("/song_count", get(get_song_count))
+        .route("/api/song", get(get_song))
+        .route("/api/search", post(search))
+        .route("/api/all_songs", get(get_all_songs))
+        .route("/api/random_songs", get(get_random_songs))
+        .route("/api/song_count", get(get_song_count))
         .route("/ws", get(ws_handler))
+        .nest_service("/cover", ServeDir::new(args.cover_path))
         .with_state(state)
         .layer(
             TraceLayer::new_for_http()
@@ -180,39 +173,6 @@ async fn get_song(
     } else {
         Err(StatusCode::NOT_FOUND)
     }
-}
-
-async fn get_cover(
-    State(state): State<Arc<AppState>>,
-    Path(song_id): Path<i64>,
-) -> Result<(HeaderMap, Body), StatusCode> {
-    let Some(cover_path) = state.song_covers.get(&song_id) else {
-        return Err(StatusCode::NOT_FOUND);
-    };
-
-    let guess = mime_guess::from_path(cover_path).first_or(mime_guess::mime::IMAGE_JPEG);
-    let mut file = File::open(cover_path).await.map_err(|err| {
-        log::error!("get_cover for path {cover_path:?}: {err:?}");
-        StatusCode::NOT_FOUND
-    })?;
-    let file_length = file.seek(std::io::SeekFrom::End(0)).await.map_err(|err| {
-        log::error!("get_cover for path {cover_path:?}: {err:?}");
-        StatusCode::INTERNAL_SERVER_ERROR
-    })?;
-    file.seek(std::io::SeekFrom::Start(0))
-        .await
-        .map_err(|err| {
-            log::error!("get_cover for path {cover_path:?}: {err:?}");
-            StatusCode::INTERNAL_SERVER_ERROR
-        })?;
-
-    let body = Body::from_stream(tokio_util::io::ReaderStream::new(file));
-
-    let mut headers = HeaderMap::new();
-    headers.insert(CONTENT_TYPE, guess.as_ref().parse().unwrap());
-    headers.insert(CONTENT_LENGTH, file_length.to_string().parse().unwrap());
-
-    Ok((headers, body))
 }
 
 async fn search(
