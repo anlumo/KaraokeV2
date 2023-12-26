@@ -100,8 +100,11 @@ class _MyAppState extends State<MyApp> {
                 ],
               );
             case WebSocketConnectedState(:final isAdmin):
-              return BlocProvider.value(
-                value: server.playlist,
+              return MultiBlocProvider(
+                providers: [
+                  BlocProvider.value(value: server.playlist),
+                  BlocProvider.value(value: server.connectionCubit),
+                ],
                 child: DefaultTabController(
                   length: 3,
                   child: Scaffold(
@@ -150,7 +153,6 @@ class _MyAppState extends State<MyApp> {
                     ),
                     body: Builder(builder: (context) {
                       return BlocBuilder<ConnectionCubit, WebSocketConnectionState>(
-                        bloc: server.connectionCubit,
                         buildWhen: (previous, current) {
                           if (current is WebSocketConnectedState &&
                               current.isAdmin &&
