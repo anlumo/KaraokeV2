@@ -68,8 +68,16 @@ class SongCard extends StatelessWidget {
                 bottom: parent.bottom.margin(8),
               ),
               ((song.coverPath == null)
-                      ? const Placeholder()
-                      : Image.network('http://$serverHost/cover/${song.coverPath}'))
+                      ? ColoredBox(
+                          color: theme.colorScheme.secondary,
+                          child: Icon(Icons.music_note, size: 50, color: theme.colorScheme.onSecondary))
+                      : InkWell(
+                          onTap: () => showDialog(
+                                context: context,
+                                builder: (context) =>
+                                    Dialog(child: Image.network('http://$serverHost/cover/${song.coverPath}')),
+                              ),
+                          child: Image.network('http://$serverHost/cover/${song.coverPath}')))
                   .applyConstraint(
                 id: coverImage,
                 width: 80,
