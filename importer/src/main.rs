@@ -52,9 +52,9 @@ fn parse_txt(
 
     let changes = insert_stmt.execute((
         full_path.as_os_str().as_bytes(),
-        &song.header.title,
-        &song.header.artist,
-        song.header.language.as_deref(),
+        song.header.title.trim(),
+        song.header.artist.trim(),
+        song.header.language.map(|lang| lang.trim().to_owned()),
         song.header.year,
         stream.duration() as f64 * f64::from(stream.time_base()),
         song.lines
@@ -63,9 +63,9 @@ fn parse_txt(
                 line.notes
                     .into_iter()
                     .filter_map(|note| match note {
-                        ultrastar_txt::Note::Regular { text, .. } => Some(text),
-                        ultrastar_txt::Note::Golden { text, .. } => Some(text),
-                        ultrastar_txt::Note::Freestyle { text, .. } => Some(text),
+                        ultrastar_txt::Note::Regular { text, .. } => Some(text.trim().to_owned()),
+                        ultrastar_txt::Note::Golden { text, .. } => Some(text.trim().to_owned()),
+                        ultrastar_txt::Note::Freestyle { text, .. } => Some(text.trim().to_owned()),
                         ultrastar_txt::Note::PlayerChange { .. } => None,
                     })
                     .collect::<String>()
