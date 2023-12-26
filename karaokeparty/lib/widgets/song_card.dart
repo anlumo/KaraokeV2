@@ -4,14 +4,14 @@ import 'package:karaokeparty/add_dialog/add_dialog.dart';
 import 'package:karaokeparty/api/api.dart';
 import 'package:karaokeparty/api/song_cache.dart';
 import 'package:karaokeparty/i18n/strings.g.dart';
-import 'package:karaokeparty/main.dart';
 import 'package:karaokeparty/model/playlist_entry.dart';
 import 'package:karaokeparty/model/song.dart';
 import 'package:karaokeparty/widgets/lyrics.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 
 class SongCard extends StatelessWidget {
-  SongCard({required this.song, required this.api, this.singer, this.disabled = false, super.key});
+  SongCard(
+      {required this.song, required this.api, this.singer, this.disabled = false, this.selected = false, super.key});
 
   final Song song;
   final title = ConstraintId('title');
@@ -19,6 +19,7 @@ class SongCard extends StatelessWidget {
   final String? singer;
   final ServerApi api;
   final bool disabled;
+  final bool selected;
 
   @override
   Widget build(BuildContext context) {
@@ -27,6 +28,10 @@ class SongCard extends StatelessWidget {
     return ConstrainedBox(
       constraints: const BoxConstraints(minWidth: 380.0, maxHeight: 96, minHeight: 96),
       child: Card(
+        shape: selected
+            ? RoundedRectangleBorder(
+                side: BorderSide(color: theme.colorScheme.primary, width: 2), borderRadius: BorderRadius.circular(4))
+            : null,
         child: InkWell(
           borderRadius: BorderRadius.circular(4),
           onTap: disabled
@@ -151,12 +156,14 @@ class PlaylistSongCard extends StatelessWidget {
     required this.songCache,
     required this.entry,
     required this.api,
+    this.selected = false,
     super.key,
   });
 
   final SongCache songCache;
   final PlaylistEntry entry;
   final ServerApi api;
+  final bool selected;
 
   @override
   Widget build(BuildContext context) {
@@ -167,6 +174,7 @@ class PlaylistSongCard extends StatelessWidget {
         singer: entry.singer,
         api: api,
         disabled: true,
+        selected: selected,
       );
     }
 
@@ -183,6 +191,7 @@ class PlaylistSongCard extends StatelessWidget {
               singer: entry.singer,
               api: api,
               disabled: true,
+              selected: selected,
             )),
           );
         } else if (snapshot.data == null) {
@@ -196,6 +205,7 @@ class PlaylistSongCard extends StatelessWidget {
           singer: entry.singer,
           api: api,
           disabled: true,
+          selected: selected,
         );
       },
     );
