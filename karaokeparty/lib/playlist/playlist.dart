@@ -52,6 +52,30 @@ class _PlaylistState extends State<Playlist> {
                             return AnimatedBuilder(
                                 animation: dragAnimation,
                                 builder: (context, child) {
+                                  final listItem = Row(
+                                    children: [
+                                      IconButton(
+                                          onPressed: () {
+                                            connectionState.play(item.id);
+                                          },
+                                          icon: const Icon(Icons.play_arrow)),
+                                      Expanded(
+                                          child: PlaylistSongCard(
+                                              songCache: widget.songCache, entry: item, api: widget.api)),
+                                      SizeFadeTransition(
+                                        animation: itemAnimation,
+                                        child: Handle(
+                                          delay: const Duration(milliseconds: 600),
+                                          child: Container(
+                                            height: 120,
+                                            padding: const EdgeInsets.symmetric(horizontal: 8),
+                                            child: const Icon(Icons.menu),
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  );
+
                                   return SizeFadeTransition(
                                     animation: itemAnimation,
                                     sizeFraction: 0.7,
@@ -79,29 +103,10 @@ class _PlaylistState extends State<Playlist> {
                                               },
                                             ),
                                           ]),
-                                      child: Row(
-                                        children: [
-                                          IconButton(
-                                              onPressed: () {
-                                                connectionState.play(item.id);
-                                              },
-                                              icon: const Icon(Icons.play_arrow)),
-                                          Expanded(
-                                              child: PlaylistSongCard(
-                                                  songCache: widget.songCache, entry: item, api: widget.api)),
-                                          SizeFadeTransition(
-                                            animation: itemAnimation,
-                                            child: Handle(
-                                              delay: const Duration(milliseconds: 600),
-                                              child: Container(
-                                                height: 120,
-                                                padding: const EdgeInsets.symmetric(horizontal: 8),
-                                                child: const Icon(Icons.menu),
-                                              ),
-                                            ),
-                                          ),
-                                        ],
-                                      ),
+                                      child: inDrag
+                                          ? ColoredBox(
+                                              color: theme.colorScheme.secondary.withOpacity(0.5), child: listItem)
+                                          : listItem,
                                     ),
                                   );
                                 });
