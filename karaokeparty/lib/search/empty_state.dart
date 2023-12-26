@@ -50,17 +50,17 @@ class _EmptyStateState extends State<EmptyState> {
               enabled: _songs == null,
               child: ListView(
                 children: [
-                  Skeleton.keep(
-                    child: Text(
-                      context.t.search.emptyState.randomPickListTitle,
-                      style: theme.textTheme.labelLarge,
-                    ),
-                  ),
-                  ...(_songs ?? List.generate(suggestionsCount, (_) => Song.placeholder()))
-                      .map((song) => Skeleton.leaf(child: SongCard(song: song, api: widget.api))),
-                  Padding(
-                    padding: const EdgeInsets.only(top: 16.0),
-                    child: TextButton(
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Skeleton.keep(
+                          child: Text(
+                            context.t.search.emptyState.randomPickListTitle,
+                            style: theme.textTheme.labelLarge,
+                          ),
+                        ),
+                      ),
+                      TextButton(
                         onPressed: () {
                           setState(() {
                             _songs = null;
@@ -69,8 +69,14 @@ class _EmptyStateState extends State<EmptyState> {
                                 }));
                           });
                         },
-                        child: Text(context.t.search.emptyState.rerollRandom)),
+                        child: SizedBox(
+                            height: kMinInteractiveDimension,
+                            child: Center(child: Text(context.t.search.emptyState.rerollRandom))),
+                      ),
+                    ],
                   ),
+                  ...(_songs ?? List.generate(suggestionsCount, (_) => Song.placeholder()))
+                      .map((song) => Skeleton.leaf(child: SongCard(song: song, api: widget.api))),
                 ],
               ),
             ),
