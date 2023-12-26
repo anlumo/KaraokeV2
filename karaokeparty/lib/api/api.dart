@@ -40,16 +40,13 @@ final class ServerApi {
     return (jsonDecode(json) as List<dynamic>).map((song) => Song.fromJson(song)).firstOrNull;
   }
 
-  Future<Song?> fetchRandomSong() async {
-    switch (connectionCubit.state) {
-      case InitialConnectionState():
-      case ConnectingState():
-      case ConnectionFailedState():
-        return null;
-      case ConnectedState(:final songCount):
-        final songIndex = random.nextInt(songCount);
-        return await fetchSongByOffset(songIndex);
+  Future<List<Song>?> fetchRandomSongs(int count) async {
+    final response = await client.get(Uri.parse('$serverApi/random_songs?count=$count'));
+    if (response.statusCode != 200) {
+      return null;
     }
+    final json = utf8.decode(response.bodyBytes);
+    return (jsonDecode(json) as List<dynamic>).map((song) => Song.fromJson(song)).toList(growable: false);
   }
 
   Future<UuidValue?> submitSong({required String singer, required int songId}) async {

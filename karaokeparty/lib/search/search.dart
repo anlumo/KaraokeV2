@@ -4,6 +4,7 @@ import 'package:karaokeparty/add_dialog/add_dialog.dart';
 import 'package:karaokeparty/api/api.dart';
 import 'package:karaokeparty/i18n/strings.g.dart';
 import 'package:karaokeparty/model/song.dart';
+import 'package:karaokeparty/search/empty_state.dart';
 import 'package:karaokeparty/widgets/song_card.dart';
 
 class Search extends StatefulWidget {
@@ -65,9 +66,9 @@ class _SearchState extends State<Search> {
                           icon: const Icon(Icons.clear))
                       : IconButton(
                           onPressed: () async {
-                            final song = await widget.api.fetchRandomSong();
-                            if (song != null && context.mounted) {
-                              showAddSongDialog(context, song: song, api: widget.api);
+                            final songs = await widget.api.fetchRandomSongs(1);
+                            if (songs != null && songs.length == 1 && context.mounted) {
+                              showAddSongDialog(context, song: songs.first, api: widget.api);
                             }
                           },
                           icon: const Icon(Icons.casino)),
@@ -103,14 +104,7 @@ class _SearchState extends State<Search> {
                       );
                     },
                   )
-                : Padding(
-                    padding: const EdgeInsets.all(32.0),
-                    child: Text(
-                      context.t.search.emptyState,
-                      textAlign: TextAlign.center,
-                      style: theme.textTheme.bodyLarge,
-                    ),
-                  ),
+                : EmptyState(api: widget.api),
           ),
         ],
       ),

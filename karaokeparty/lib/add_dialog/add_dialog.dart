@@ -92,9 +92,9 @@ class _AddDialogState extends State<_AddDialog> {
                 child: IconButton(
                   onPressed: () async {
                     Navigator.of(context).pop();
-                    final song = await widget.api.fetchRandomSong();
-                    if (song != null && context.mounted) {
-                      showAddSongDialog(context, song: song, api: widget.api);
+                    final songs = await widget.api.fetchRandomSongs(1);
+                    if (songs != null && songs.length == 1 && context.mounted) {
+                      showAddSongDialog(context, song: songs.first, api: widget.api);
                     }
                   },
                   icon: const Icon(Icons.casino),
