@@ -68,16 +68,15 @@ class SongCard extends StatelessWidget {
                 bottom: parent.bottom.margin(8),
               ),
               ((song.coverPath == null)
-                      ? ColoredBox(
-                          color: theme.colorScheme.secondary,
-                          child: Icon(Icons.music_note, size: 50, color: theme.colorScheme.onSecondary))
+                      ? const PlaceholderCover()
                       : InkWell(
                           onTap: () => showDialog(
                                 context: context,
-                                builder: (context) =>
-                                    Dialog(child: Image.network('http://$serverHost/cover/${song.coverPath}')),
+                                builder: (context) => Dialog(
+                                  child: coverImageWidget(),
+                                ),
                               ),
-                          child: Image.network('http://$serverHost/cover/${song.coverPath}')))
+                          child: coverImageWidget()))
                   .applyConstraint(
                 id: coverImage,
                 width: 80,
@@ -107,6 +106,38 @@ class SongCard extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  Image coverImageWidget() => Image.network(
+        'http://$serverHost/cover/${song.coverPath}',
+        loadingBuilder: (BuildContext context, Widget child, ImageChunkEvent? loadingProgress) {
+          if (loadingProgress == null) {
+            return child;
+          }
+          return Center(
+            child: CircularProgressIndicator(
+              value: loadingProgress.expectedTotalBytes != null
+                  ? loadingProgress.cumulativeBytesLoaded / loadingProgress.expectedTotalBytes!
+                  : null,
+            ),
+          );
+        },
+        errorBuilder: (context, error, stackTrace) => const PlaceholderCover(),
+      );
+}
+
+class PlaceholderCover extends StatelessWidget {
+  const PlaceholderCover({
+    super.key,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return ColoredBox(
+        color: theme.colorScheme.secondary,
+        child: Icon(Icons.music_note, size: 50, color: theme.colorScheme.onSecondary));
   }
 }
 
