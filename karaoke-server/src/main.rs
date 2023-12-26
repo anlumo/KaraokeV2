@@ -51,6 +51,9 @@ struct Args {
     /// Path to the directory structure for the covers.
     #[clap(short, long)]
     cover_path: PathBuf,
+    // Path to the web app (directory containing index.html).
+    #[clap(short, long)]
+    web_app: PathBuf,
 }
 
 struct AppState {
@@ -121,7 +124,6 @@ async fn main() -> anyhow::Result<()> {
     });
 
     let app = Router::new()
-        .route("/", get(root))
         .route("/api/song", get(get_song))
         .route("/api/search", post(search))
         .route("/api/all_songs", get(get_all_songs))
@@ -129,6 +131,7 @@ async fn main() -> anyhow::Result<()> {
         .route("/api/song_count", get(get_song_count))
         .route("/ws", get(ws_handler))
         .nest_service("/cover", ServeDir::new(args.cover_path))
+        .nest_service("/", ServeDir::new(args.web_app))
         .with_state(state)
         .layer(
             TraceLayer::new_for_http()
@@ -140,10 +143,6 @@ async fn main() -> anyhow::Result<()> {
     axum::serve(listener, app).await?;
 
     Ok(())
-}
-
-async fn root() -> &'static str {
-    "Hello World"
 }
 
 #[derive(Debug, Deserialize)]
