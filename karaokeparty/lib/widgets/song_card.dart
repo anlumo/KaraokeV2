@@ -155,6 +155,16 @@ class PlaylistSongCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final maybeSong = songCache.get(entry.song);
+    if (maybeSong is Song) {
+      return SongCard(
+        song: maybeSong,
+        singer: entry.singer,
+        api: api,
+        disabled: true,
+      );
+    }
+
     return FutureBuilder(
       future: Future.value(songCache.get(entry.song)),
       builder: (context, snapshot) {
