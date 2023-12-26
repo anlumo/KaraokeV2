@@ -20,6 +20,7 @@ use axum::{
 use clap::Parser;
 use env_logger::Env;
 use now_playing::Playlist;
+use rand::Rng;
 use rusqlite::{Connection, OpenFlags};
 use serde::Deserialize;
 use tokio::{fs::File, io::AsyncSeekExt};
@@ -129,10 +130,11 @@ async fn main() -> anyhow::Result<()> {
 
     let app = Router::new()
         .route("/", get(root))
-        .route("/song/:id", get(get_song))
+        .route("/song", get(get_song))
         .route("/cover/:id", get(get_cover))
         .route("/search", post(search))
         .route("/all_songs", get(get_all_songs))
+        .route("/random_songs", get(get_random_songs))
         .route("/song_count", get(get_song_count))
         .route("/ws", get(ws_handler))
         .with_state(state)
@@ -152,17 +154,28 @@ async fn root() -> &'static str {
     "Hello World"
 }
 
+#[derive(Debug, Deserialize)]
+struct SongIds {
+    id: String,
+}
+
 async fn get_song(
     State(state): State<Arc<AppState>>,
-    Path(song_id): Path<i64>,
+    Query(SongIds { id }): Query<SongIds>,
 ) -> Result<Json<serde_json::Value>, StatusCode> {
-    let result = state
-        .index
-        .search(&format!("rowid:{song_id}"))
+    let ids = id
+        .split(',')
+        .map(|id| id.parse::<i64>().map(|id| format!("rowid:{id}")))
+        .collect::<Result<Vec<_>, _>>()
         .map_err(|err| {
-            log::error!("Search for song {song_id:?} failed: {err:?}");
-            StatusCode::INTERNAL_SERVER_ERROR
+            log::error!("Received bad request for song ids {id:?}: {err:?}");
+            StatusCode::BAD_REQUEST
         })?;
+
+    let result = state.index.search(&ids.join(" OR ")).map_err(|err| {
+        log::error!("Search for songs {ids:?} failed: {err:?}");
+        StatusCode::INTERNAL_SERVER_ERROR
+    })?;
     if let Some(song) = result.into_iter().next() {
         Ok(Json(song))
     } else {
@@ -234,4 +247,26 @@ async fn get_all_songs(
 
 async fn get_song_count(State(state): State<Arc<AppState>>) -> String {
     state.song_count.to_string()
+}
+
+#[derive(Debug, Deserialize)]
+struct SongCount {
+    count: u32,
+}
+
+async fn get_random_songs(
+    State(state): State<Arc<AppState>>,
+    Query(SongCount { count }): Query<SongCount>,
+) -> Result<Json<Vec<serde_json::Value>>, StatusCode> {
+    let total = state.song_count as u32;
+    let mut rng = rand::thread_rng();
+
+    let result = state
+        .index
+        .single_from_offsets((0..count).map(|_| rng.gen_range(0..total)))
+        .map_err(|err| {
+            log::error!("Fetching all failed: {err:?}");
+            StatusCode::INTERNAL_SERVER_ERROR
+        })?;
+    Ok(Json(result))
 }

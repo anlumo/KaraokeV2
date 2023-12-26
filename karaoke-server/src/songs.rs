@@ -165,4 +165,18 @@ impl SearchIndex {
                 .and_offset(pagination.offset as _),
         )
     }
+
+    pub fn single_from_offsets(
+        &self,
+        offsets: impl IntoIterator<Item = u32>,
+    ) -> tantivy::Result<Vec<serde_json::Value>> {
+        offsets
+            .into_iter()
+            .map(|offset| {
+                self.search_and_convert(&AllQuery, TopDocs::with_limit(1).and_offset(offset as _))
+                    .map(|mut vec| vec.pop())
+            })
+            .filter_map(|result| result.transpose())
+            .collect()
+    }
 }

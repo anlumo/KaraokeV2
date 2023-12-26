@@ -13,6 +13,7 @@ env_logger = "0.10.1"
 futures-util = "0.3.29"
 log = { version = "0.4.20", features = ["std"] }
 mime_guess = "2.0.4"
+rand = "0.8.5"
 rusqlite = { version = "0.30.0", features = ["trace"] }
 serde = { version = "1.0.193", features = ["derive"] }
 serde_json = "1.0.108"

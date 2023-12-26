@@ -11,7 +11,7 @@ final class SongCache {
     if (cached != null) {
       return cached;
     }
-    final response = await client.get(Uri.parse('$serverApi/song/$id'));
+    final response = await client.get(Uri.parse('$serverApi/song?id=$id'));
     if (response.statusCode != 200) {
       _cache[id] = null;
       return null;
