@@ -156,10 +156,9 @@ class PlaylistSongCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return FutureBuilder(
-      future: songCache.get(entry.song),
+      future: Future.value(songCache.get(entry.song)),
       builder: (context, snapshot) {
         final theme = Theme.of(context);
-        log.d('snapshot: $snapshot');
 
         if (!snapshot.hasData) {
           return Skeletonizer(
