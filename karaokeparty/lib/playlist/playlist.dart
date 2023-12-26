@@ -71,10 +71,15 @@ class _PlaylistState extends State<Playlist> {
                                           animation: itemAnimation,
                                           child: Handle(
                                             delay: const Duration(milliseconds: 600),
-                                            child: Container(
-                                              height: 120,
-                                              padding: const EdgeInsets.symmetric(horizontal: 8),
-                                              child: const Icon(Icons.menu),
+                                            child: MouseRegion(
+                                              cursor: inDrag ? SystemMouseCursors.grabbing : SystemMouseCursors.grab,
+                                              child: const SizedBox(
+                                                height: 80,
+                                                child: Padding(
+                                                  padding: EdgeInsets.symmetric(horizontal: 8),
+                                                  child: Icon(Icons.menu),
+                                                ),
+                                              ),
                                             ),
                                           ),
                                         ),
