@@ -51,7 +51,9 @@ class _SearchState extends State<Search> {
               leading: const Icon(Icons.search),
               trailing: [
                 Tooltip(
-                  message: context.t.search.randomPickButton,
+                  message: _controller.text.isNotEmpty
+                      ? context.t.search.clearTextButton
+                      : context.t.search.randomPickButton,
                   child: _controller.text.isNotEmpty
                       ? IconButton(
                           onPressed: () {
