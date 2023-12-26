@@ -170,10 +170,10 @@ impl Playlist {
             {
                 if entry < after_entry {
                     let entry = queue.list.remove(entry).unwrap();
-                    queue.list.insert(after_entry + 1, entry);
+                    queue.list.insert(after_entry, entry);
                 } else {
                     let entry = queue.list.remove(entry).unwrap();
-                    queue.list.insert(after_entry, entry);
+                    queue.list.insert(after_entry + 1, entry);
                 }
                 Self::did_change(&mut queue, &self.persist_path).await?;
                 return Ok(true);
