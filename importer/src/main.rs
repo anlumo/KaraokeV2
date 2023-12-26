@@ -42,13 +42,10 @@ fn parse_txt(
         ));
     };
 
-    let cover_path = song
-        .header
-        .cover_path
-        .and_then(|cover_path| match cover_path {
-            Source::Local(cover_path) => Some(cover_path.as_os_str().as_bytes().to_owned()),
-            _ => panic!("Song {} has remote cover", song.header.title),
-        });
+    let cover_path = song.header.cover_path.map(|cover_path| match cover_path {
+        Source::Local(cover_path) => cover_path.as_os_str().as_bytes().to_owned(),
+        _ => panic!("Song {} has remote cover", song.header.title),
+    });
 
     let changes = insert_stmt.execute((
         full_path.as_os_str().as_bytes(),
