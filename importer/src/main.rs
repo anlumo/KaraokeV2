@@ -63,12 +63,14 @@ fn parse_txt(
                 line.notes
                     .into_iter()
                     .filter_map(|note| match note {
-                        ultrastar_txt::Note::Regular { text, .. } => Some(text.trim().to_owned()),
-                        ultrastar_txt::Note::Golden { text, .. } => Some(text.trim().to_owned()),
-                        ultrastar_txt::Note::Freestyle { text, .. } => Some(text.trim().to_owned()),
+                        ultrastar_txt::Note::Regular { text, .. } => Some(text),
+                        ultrastar_txt::Note::Golden { text, .. } => Some(text),
+                        ultrastar_txt::Note::Freestyle { text, .. } => Some(text),
                         ultrastar_txt::Note::PlayerChange { .. } => None,
                     })
                     .collect::<String>()
+                    .trim()
+                    .to_owned()
             })
             .collect::<Vec<_>>()
             .join("\n"),
