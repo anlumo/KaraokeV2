@@ -38,6 +38,22 @@ class _PlaylistState extends State<Playlist> {
         onKeyEvent: itemOnKey);
   }
 
+  WebSocketConnectedState? connectionFromFocusNode(FocusNode focusNode) {
+    final context = focusNode.context;
+    if (context != null) {
+      final connection = context.read<ConnectionCubit>();
+      switch (connection.state) {
+        case InitialWebSocketConnectionState():
+        case WebSocketConnectingState():
+        case WebSocketConnectionFailedState():
+          break;
+        case WebSocketConnectedState():
+          return connection.state as WebSocketConnectedState;
+      }
+    }
+    return null;
+  }
+
   KeyEventResult itemOnKey(FocusNode focusNode, KeyEvent event) {
     if (event is KeyUpEvent) {
       return KeyEventResult.ignored;
@@ -45,6 +61,20 @@ class _PlaylistState extends State<Playlist> {
     switch (event.logicalKey) {
       case LogicalKeyboardKey.arrowUp:
         if (_selectedItem > 0) {
+          final keys = HardwareKeyboard.instance.logicalKeysPressed;
+          if (keys.contains(LogicalKeyboardKey.alt) ||
+              keys.contains(LogicalKeyboardKey.altLeft) ||
+              keys.contains(LogicalKeyboardKey.altRight) ||
+              keys.contains(LogicalKeyboardKey.altGraph)) {
+            final connection = connectionFromFocusNode(focusNode);
+            if (connection != null) {
+              if (_selectedItem > 1) {
+                connection.moveAfter(_songQueue![_selectedItem].id, after: _songQueue![_selectedItem - 2].id);
+              } else {
+                connection.moveTop(_songQueue![_selectedItem].id);
+              }
+            }
+          }
           setState(() {
             _selectedItem -= 1;
           });
@@ -52,6 +82,14 @@ class _PlaylistState extends State<Playlist> {
         return KeyEventResult.handled;
       case LogicalKeyboardKey.arrowDown:
         if (_selectedItem < (_songQueue?.length ?? 0) - 1) {
+          final keys = HardwareKeyboard.instance.logicalKeysPressed;
+          if (keys.contains(LogicalKeyboardKey.alt) ||
+              keys.contains(LogicalKeyboardKey.altLeft) ||
+              keys.contains(LogicalKeyboardKey.altRight) ||
+              keys.contains(LogicalKeyboardKey.altGraph)) {
+            final connection = connectionFromFocusNode(focusNode);
+            connection?.moveAfter(_songQueue![_selectedItem].id, after: _songQueue![_selectedItem + 1].id);
+          }
           setState(() {
             _selectedItem += 1;
           });
@@ -67,6 +105,15 @@ class _PlaylistState extends State<Playlist> {
           _selectedItem = (_songQueue?.length ?? 1) - 1;
         });
         return KeyEventResult.handled;
+      case LogicalKeyboardKey.enter:
+        final connection = connectionFromFocusNode(focusNode);
+        connection?.play(_songQueue![_selectedItem].id);
+        return connection != null ? KeyEventResult.handled : KeyEventResult.ignored;
+      case LogicalKeyboardKey.delete:
+      case LogicalKeyboardKey.backspace:
+        final connection = connectionFromFocusNode(focusNode);
+        connection?.remove(_songQueue![_selectedItem].id);
+        return connection != null ? KeyEventResult.handled : KeyEventResult.ignored;
       default:
         return KeyEventResult.ignored;
     }
