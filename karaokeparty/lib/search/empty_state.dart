@@ -4,6 +4,9 @@ import 'package:karaokeparty/api/api.dart';
 import 'package:karaokeparty/i18n/strings.g.dart';
 import 'package:karaokeparty/model/song.dart';
 import 'package:karaokeparty/widgets/song_card.dart';
+import 'package:skeletonizer/skeletonizer.dart';
+
+const suggestionsCount = 5;
 
 class EmptyState extends StatefulWidget {
   const EmptyState({required this.api, super.key});
@@ -21,7 +24,7 @@ class _EmptyStateState extends State<EmptyState> {
   @override
   void initState() {
     super.initState();
-    widget.api.fetchRandomSongs(5).then((songs) => setState(() {
+    widget.api.fetchRandomSongs(suggestionsCount).then((songs) => setState(() {
           _songs = songs;
         }));
   }
@@ -42,28 +45,36 @@ class _EmptyStateState extends State<EmptyState> {
           const SizedBox(
             height: 16,
           ),
-          if (_songs != null)
-            Flexible(
+          Flexible(
+            child: Skeletonizer(
+              enabled: _songs == null,
               child: ListView(
                 children: [
-                  Text(
-                    context.t.search.emptyState.randomPickListTitle,
-                    style: theme.textTheme.labelLarge,
+                  Skeleton.keep(
+                    child: Text(
+                      context.t.search.emptyState.randomPickListTitle,
+                      style: theme.textTheme.labelLarge,
+                    ),
                   ),
-                  ..._songs!.map((song) => SongCard(song: song, api: widget.api)),
+                  ...(_songs ?? List.generate(suggestionsCount, (_) => Song.placeholder()))
+                      .map((song) => Skeleton.leaf(child: SongCard(song: song, api: widget.api))),
                   Padding(
                     padding: const EdgeInsets.only(top: 16.0),
                     child: TextButton(
                         onPressed: () {
-                          widget.api.fetchRandomSongs(5).then((songs) => setState(() {
-                                _songs = songs;
-                              }));
+                          setState(() {
+                            _songs = null;
+                            widget.api.fetchRandomSongs(suggestionsCount).then((songs) => setState(() {
+                                  _songs = songs;
+                                }));
+                          });
                         },
                         child: Text(context.t.search.emptyState.rerollRandom)),
                   ),
                 ],
               ),
             ),
+          ),
         ],
       ),
     );
