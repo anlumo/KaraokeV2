@@ -30,6 +30,8 @@ class _SearchState extends State<Search> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Padding(
       padding: const EdgeInsets.all(8.0),
       child: Stack(
@@ -71,35 +73,43 @@ class _SearchState extends State<Search> {
               ],
             ),
           ),
-          if (_searchResults != null)
-            Positioned.fill(
-              top: 66,
-              child: FutureBuilder(
-                future: _searchResults,
-                builder: (context, snapshot) {
-                  if (snapshot.hasError) {
-                    final theme = Theme.of(context);
+          Positioned.fill(
+            top: 66,
+            child: (_searchResults != null)
+                ? FutureBuilder(
+                    future: _searchResults,
+                    builder: (context, snapshot) {
+                      if (snapshot.hasError) {
+                        final theme = Theme.of(context);
 
-                    return Center(
-                      child: Text(
-                        snapshot.error.toString(),
-                        style: theme.textTheme.labelLarge!.copyWith(color: theme.colorScheme.error),
-                      ),
-                    );
-                  }
-                  if (!snapshot.hasData) {
-                    return const Center(child: SizedBox(width: 50, height: 50, child: CircularProgressIndicator()));
-                  }
-                  return ListView.builder(
-                    primary: true,
-                    itemCount: snapshot.data!.length,
-                    itemBuilder: (context, index) {
-                      return SongCard(song: snapshot.data![index], api: widget.api);
+                        return Center(
+                          child: Text(
+                            snapshot.error.toString(),
+                            style: theme.textTheme.labelLarge!.copyWith(color: theme.colorScheme.error),
+                          ),
+                        );
+                      }
+                      if (!snapshot.hasData) {
+                        return const Center(child: SizedBox(width: 50, height: 50, child: CircularProgressIndicator()));
+                      }
+                      return ListView.builder(
+                        primary: true,
+                        itemCount: snapshot.data!.length,
+                        itemBuilder: (context, index) {
+                          return SongCard(song: snapshot.data![index], api: widget.api);
+                        },
+                      );
                     },
-                  );
-                },
-              ),
-            ),
+                  )
+                : Padding(
+                    padding: const EdgeInsets.all(32.0),
+                    child: Text(
+                      context.t.search.emptyState,
+                      textAlign: TextAlign.center,
+                      style: theme.textTheme.bodyLarge,
+                    ),
+                  ),
+          ),
         ],
       ),
     );
