@@ -47,7 +47,7 @@ fn parse_txt(
         .cover_path
         .and_then(|cover_path| match cover_path {
             Source::Local(cover_path) => Some(cover_path.as_os_str().as_bytes().to_owned()),
-            _ => None,
+            _ => panic!("Song {} has remote cover", song.header.title),
         });
 
     let changes = insert_stmt.execute((
