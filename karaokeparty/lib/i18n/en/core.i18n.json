@@ -1,5 +1,8 @@
 {
     "title": "Karaoke Party",
+    "searchTabTooltip": "Search",
+    "masterListTooltip": "Browse library",
+    "playlistTooltip": "Current playlist",
     "songCardArtistYear": "$artist ($year)",
     "showLyricsButton": "Show lyrics",
     "coverAction": "Click to magnify",

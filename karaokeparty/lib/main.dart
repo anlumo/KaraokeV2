@@ -110,10 +110,19 @@ class _MyAppState extends State<MyApp> {
                   child: Scaffold(
                     appBar: AppBar(
                       title: Text(context.t.core.title),
-                      bottom: const TabBar(tabs: [
-                        Tab(icon: Icon(Icons.search)),
-                        Tab(icon: Icon(Icons.library_music)),
-                        Tab(icon: Icon(Icons.mic_external_on)),
+                      bottom: TabBar(tabs: [
+                        Tooltip(
+                          message: context.t.core.searchTabTooltip,
+                          child: const Tab(icon: Icon(Icons.search)),
+                        ),
+                        Tooltip(
+                          message: context.t.core.masterListTooltip,
+                          child: const Tab(icon: Icon(Icons.library_music)),
+                        ),
+                        Tooltip(
+                          message: context.t.core.playlistTooltip,
+                          child: const Tab(icon: Icon(Icons.mic_external_on)),
+                        ),
                       ]),
                       actions: [
                         Padding(
