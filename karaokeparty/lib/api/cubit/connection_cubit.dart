@@ -11,6 +11,7 @@ import 'package:karaokeparty/api/cubit/playlist_cubit.dart';
 import 'package:karaokeparty/i18n/strings.g.dart';
 import 'package:karaokeparty/main.dart';
 import 'package:karaokeparty/model/playlist_entry.dart';
+import 'package:uuid/uuid.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 
 part 'connection_state.dart';

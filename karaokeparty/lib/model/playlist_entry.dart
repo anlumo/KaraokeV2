@@ -11,4 +11,7 @@ final class PlaylistEntry {
       : id = UuidValue.fromString(json['id']),
         song = json['song'] as int,
         singer = json['singer'];
+
+  @override
+  String toString() => "[PlaylistEntry $id: song = $song, singer = $singer]";
 }

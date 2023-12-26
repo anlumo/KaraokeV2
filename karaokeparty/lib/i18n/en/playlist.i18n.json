@@ -3,5 +3,6 @@
     "lyricsDialog": {
         "title": "Lyrics for $song",
         "closeButton": "Close"
-    }
+    },
+    "deleteLabel": "Delete"
 }

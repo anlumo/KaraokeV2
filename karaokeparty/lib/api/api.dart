@@ -62,12 +62,12 @@ final class ServerApi {
     return (jsonDecode(json) as List<dynamic>).map((song) => Song.fromJson(song)).toList(growable: false);
   }
 
-  Future<UuidValue?> submitSong({required String singer, required int songId}) async {
+  void submitSong({required String singer, required int songId}) {
     switch (connectionCubit.state) {
       case InitialWebSocketConnectionState():
       case WebSocketConnectingState():
       case WebSocketConnectionFailedState():
-        return null;
+        return;
       case WebSocketConnectedState(:final sink):
         sink.add(jsonEncode({
           'cmd': 'add',
@@ -75,6 +75,5 @@ final class ServerApi {
           'singer': singer,
         }));
     }
-    return null;
   }
 }

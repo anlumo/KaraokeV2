@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:karaokeparty/api/api.dart';
+import 'package:karaokeparty/api/cubit/connection_cubit.dart';
 import 'package:karaokeparty/i18n/strings.g.dart';
 import 'package:karaokeparty/model/song.dart';
 import 'package:karaokeparty/widgets/song_card.dart';
@@ -28,7 +29,10 @@ class _AddDialogState extends State<_AddDialog> {
   }
 
   Future<void> _submit(BuildContext context) async {
-    await widget.api.submitSong(singer: _singerController.text, songId: widget.song.id);
+    final state = widget.api.connectionCubit.state;
+    if (state is WebSocketConnectedState) {
+      state.submitSong(singer: _singerController.text, songId: widget.song.id);
+    }
     _submitButtonController.success();
     if (context.mounted) {
       Navigator.of(context).pop();
