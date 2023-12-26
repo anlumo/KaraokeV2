@@ -4,8 +4,8 @@ use serde::Serialize;
 use tantivy::{
     collector::{Collector, TopDocs},
     query::{AllQuery, Query, QueryParser},
-    schema::{Field, Schema, INDEXED, STORED, STRING, TEXT},
-    DocAddress, Document, Index, IndexReader,
+    schema::{Field, Schema, FAST, INDEXED, STORED, STRING, TEXT},
+    DocAddress, Document, Index, IndexReader, IndexSettings, IndexSortByField,
 };
 
 use crate::Pagination;
@@ -24,8 +24,6 @@ pub struct Song {
     pub lyrics: Option<String>,
     #[serde(default, skip)]
     pub cover_path: Option<PathBuf>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub weight: Option<f32>,
 }
 
 pub struct SearchIndex {
@@ -44,6 +42,7 @@ pub struct SearchIndex {
 impl SearchIndex {
     pub fn new<'a>(input: impl IntoIterator<Item = &'a Song>) -> anyhow::Result<Self> {
         let mut schema_builder = Schema::builder();
+        let order_field = schema_builder.add_u64_field("order", STORED | FAST);
         let rowid_field = schema_builder.add_i64_field("rowid", INDEXED | STORED);
         let title_field = schema_builder.add_text_field("title", TEXT | STORED);
         let artist_field = schema_builder.add_text_field("artist", TEXT | STORED);
@@ -53,14 +52,24 @@ impl SearchIndex {
         let duration_field = schema_builder.add_f64_field("duration", STORED);
         let schema = schema_builder.build();
 
-        let mut index = Index::create_in_ram(schema);
+        let mut index = Index::builder()
+            .schema(schema)
+            .settings(IndexSettings {
+                sort_by_field: Some(IndexSortByField {
+                    field: "order".to_owned(),
+                    order: tantivy::Order::Asc,
+                }),
+                ..Default::default()
+            })
+            .create_in_ram()?;
         index.set_default_multithread_executor()?;
 
         let mut index_writer = index.writer(50_000_000)?;
 
-        for song in input {
+        for (order, song) in input.into_iter().enumerate() {
             let mut doc = Document::new();
             doc.add_i64(rowid_field, song.row_id);
+            doc.add_u64(order_field, order as _);
             doc.add_text(title_field, song.title.clone());
             doc.add_text(artist_field, song.artist.clone());
             doc.add_f64(duration_field, song.duration as _);
@@ -102,7 +111,7 @@ impl SearchIndex {
         })
     }
 
-    fn search_and_convert<C: Collector<Fruit = Vec<(f32, DocAddress)>>>(
+    fn search_and_convert<OrderValue, C: Collector<Fruit = Vec<(OrderValue, DocAddress)>>>(
         &self,
         query: &dyn Query,
         collector: C,
@@ -112,7 +121,7 @@ impl SearchIndex {
 
         results
             .into_iter()
-            .map(|(weight, address)| {
+            .map(|(_, address)| {
                 let song = searcher.doc(address)?;
 
                 let song = Song {
@@ -144,7 +153,6 @@ impl SearchIndex {
                         .get_first(self.lyrics_field)
                         .map(|lyrics| lyrics.as_text().unwrap().to_owned()),
                     cover_path: None,
-                    weight: Some(weight),
                 };
                 Ok(serde_json::to_value(song).unwrap())
             })
@@ -159,10 +167,11 @@ impl SearchIndex {
     }
 
     pub fn all(&self, pagination: Pagination) -> tantivy::Result<Vec<serde_json::Value>> {
-        self.search_and_convert(
+        self.search_and_convert::<u64, _>(
             &AllQuery,
             TopDocs::with_limit(pagination.per_page.min(100) as _)
-                .and_offset(pagination.offset as _),
+                .and_offset(pagination.offset as _)
+                .order_by_fast_field("order", tantivy::Order::Asc),
         )
     }
 

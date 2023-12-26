@@ -84,7 +84,7 @@ async fn main() -> anyhow::Result<()> {
         let tx = conn.transaction()?;
 
         let mut stmt = tx.prepare(
-            "SELECT rowid, title, artist, language, year, duration, lyrics, cover_path FROM song",
+            "SELECT rowid, title, artist, language, year, duration, lyrics, cover_path FROM song ORDER BY title COLLATE NOCASE",
         )?;
         song_db = stmt
             .query_map((), |row| {
@@ -99,7 +99,6 @@ async fn main() -> anyhow::Result<()> {
                     duration: row.get("duration")?,
                     lyrics: row.get("lyrics")?,
                     cover_path: cover_path.map(|path| PathBuf::from(OsStr::from_bytes(&path))),
-                    weight: None,
                 })
             })?
             .filter_map(|result| match result {
