@@ -31,8 +31,6 @@ class _SearchState extends State<Search> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
     return Padding(
       padding: const EdgeInsets.all(8.0),
       child: Stack(
@@ -104,7 +102,10 @@ class _SearchState extends State<Search> {
                       );
                     },
                   )
-                : EmptyState(api: widget.api),
+                : EmptyState(
+                    api: widget.api,
+                    explanation: context.t.search.emptyState.explanation,
+                  ),
           ),
         ],
       ),

@@ -9,9 +9,10 @@ import 'package:skeletonizer/skeletonizer.dart';
 const suggestionsCount = 5;
 
 class EmptyState extends StatefulWidget {
-  const EmptyState({required this.api, super.key});
+  const EmptyState({required this.api, required this.explanation, super.key});
 
   final ServerApi api;
+  final String explanation;
 
   @override
   State<EmptyState> createState() => _EmptyStateState();
@@ -38,7 +39,7 @@ class _EmptyStateState extends State<EmptyState> {
       child: Column(
         children: [
           Text(
-            context.t.search.emptyState.explanation,
+            widget.explanation,
             textAlign: TextAlign.center,
             style: theme.textTheme.bodyLarge,
           ),

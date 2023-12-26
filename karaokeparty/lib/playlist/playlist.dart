@@ -9,8 +9,8 @@ import 'package:karaokeparty/api/cubit/connection_cubit.dart';
 import 'package:karaokeparty/api/cubit/playlist_cubit.dart';
 import 'package:karaokeparty/api/song_cache.dart';
 import 'package:karaokeparty/i18n/strings.g.dart';
-import 'package:karaokeparty/main.dart';
 import 'package:karaokeparty/model/playlist_entry.dart';
+import 'package:karaokeparty/search/empty_state.dart';
 import 'package:karaokeparty/widgets/song_card.dart';
 
 class Playlist extends StatefulWidget {
@@ -139,6 +139,11 @@ class _PlaylistState extends State<Playlist> {
               },
               builder: (context, state) {
                 _songQueue ??= List.from(state.songQueue);
+                if (_songQueue?.isEmpty ?? true) {
+                  return Center(
+                    child: EmptyState(api: widget.api, explanation: context.t.playlist.emptyState),
+                  );
+                }
                 if (isAdmin) {
                   return SlidableAutoCloseBehavior(
                     child: Focus(
