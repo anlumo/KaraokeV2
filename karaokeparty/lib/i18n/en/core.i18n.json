@@ -1,6 +1,8 @@
 {
     "title": "Karaoke Party",
     "songCardArtistYear": "$artist ($year)",
+    "showLyricsButton": "Show lyrics",
+    "coverAction": "Click to magnify",
     "adminModeTitle": "MC",
     "logoutAdminModeTitle": "Logout",
     "adminModeButtonTooltip": "Login as MC",

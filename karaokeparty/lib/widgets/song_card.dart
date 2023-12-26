@@ -69,14 +69,17 @@ class SongCard extends StatelessWidget {
               ),
               ((song.coverPath == null)
                       ? const PlaceholderCover()
-                      : InkWell(
-                          onTap: () => showDialog(
-                                context: context,
-                                builder: (context) => Dialog(
-                                  child: coverImageWidget(),
-                                ),
-                              ),
-                          child: coverImageWidget()))
+                      : Tooltip(
+                          message: context.t.core.coverAction,
+                          child: InkWell(
+                              onTap: () => showDialog(
+                                    context: context,
+                                    builder: (context) => Dialog(
+                                      child: coverImageWidget(),
+                                    ),
+                                  ),
+                              child: coverImageWidget()),
+                        ))
                   .applyConstraint(
                 id: coverImage,
                 width: 80,
@@ -95,12 +98,14 @@ class SongCard extends StatelessWidget {
                   width: matchConstraint,
                 ),
               if (song.lyrics != null)
-                IconButton(
-                        onPressed: () {
-                          showLyricsDialog(context, song);
-                        },
-                        icon: const Icon(Icons.lyrics))
-                    .applyConstraint(right: coverImage.left.margin(8), top: parent.top.margin(8)),
+                Tooltip(
+                  message: context.t.core.showLyricsButton,
+                  child: IconButton(
+                      onPressed: () {
+                        showLyricsDialog(context, song);
+                      },
+                      icon: const Icon(Icons.lyrics)),
+                ).applyConstraint(right: coverImage.left.margin(8), top: parent.top.margin(8)),
             ],
           ),
         ),
