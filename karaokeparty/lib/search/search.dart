@@ -20,6 +20,7 @@ class _SearchState extends State<Search> {
   Future<List<Song>>? _searchResults;
   final _controller = TextEditingController();
   final searchBar = ConstraintId('searchbar');
+  final _searchBarFocusNode = FocusNode(debugLabel: 'searchbar');
 
   @override
   void initState() {
@@ -27,6 +28,7 @@ class _SearchState extends State<Search> {
     _controller.addListener(() {
       setState(() {});
     });
+    _searchBarFocusNode.requestFocus();
   }
 
   @override
@@ -38,6 +40,7 @@ class _SearchState extends State<Search> {
           Positioned.fill(
             bottom: null,
             child: SearchBar(
+              focusNode: _searchBarFocusNode,
               controller: _controller,
               padding: const MaterialStatePropertyAll<EdgeInsets>(EdgeInsets.symmetric(horizontal: 16.0)),
               onTap: () {},

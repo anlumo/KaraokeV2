@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:karaokeparty/api/api.dart';
 import 'package:karaokeparty/api/cubit/connection_cubit.dart';
 import 'package:karaokeparty/api/song_cache.dart';
 import 'package:karaokeparty/browse/browse.dart';
 import 'package:karaokeparty/i18n/strings.g.dart';
+import 'package:karaokeparty/intents.dart';
 import 'package:karaokeparty/login/login.dart';
 import 'package:karaokeparty/now_playing/now_playing.dart';
 import 'package:karaokeparty/playlist/playlist.dart';
@@ -107,94 +109,119 @@ class _MyAppState extends State<MyApp> {
                 ],
                 child: DefaultTabController(
                   length: 3,
-                  child: Scaffold(
-                    appBar: AppBar(
-                      title: Text(context.t.core.title),
-                      bottom: TabBar(tabs: [
-                        Tooltip(
-                          message: context.t.core.searchTabTooltip,
-                          child: const Tab(icon: Icon(Icons.search)),
-                        ),
-                        Tooltip(
-                          message: context.t.core.masterListTooltip,
-                          child: const Tab(icon: Icon(Icons.library_music)),
-                        ),
-                        Tooltip(
-                          message: context.t.core.playlistTooltip,
-                          child: const Tab(icon: Icon(Icons.mic_external_on)),
-                        ),
-                      ]),
-                      actions: [
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                          child: Tooltip(
-                            message: context.t.core.adminModeButtonTooltip,
-                            child: TextButton(
-                              onPressed: () {
-                                if (isAdmin) {
-                                  server.connectionCubit.logout();
-                                } else {
-                                  showLoginDialog(context, server.connectionCubit);
-                                }
-                              },
-                              child:
-                                  Text(isAdmin ? context.t.core.logoutAdminModeTitle : context.t.core.adminModeTitle),
-                            ),
-                          ),
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                          child: Tooltip(
-                            message: context.t.core.darkModeButtonTooltip,
-                            child: IconButton(
-                              onPressed: () {
-                                setState(() {
-                                  isDark = !isDark;
-                                });
-                              },
-                              isSelected: isDark,
-                              icon: const Icon(Icons.wb_sunny_outlined),
-                              selectedIcon: const Icon(Icons.brightness_2_outlined),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    body: Builder(builder: (context) {
-                      return BlocBuilder<ConnectionCubit, WebSocketConnectionState>(
-                        buildWhen: (previous, current) {
-                          if (current is WebSocketConnectedState &&
-                              current.isAdmin &&
-                              (previous is! WebSocketConnectedState || !previous.isAdmin)) {
-                            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                              content: Text(context.t.login.loggedInSnackbar),
-                            ));
-                          }
-                          return false;
+                  child: Builder(builder: (context) {
+                    return Actions(
+                      actions: {
+                        SearchTabIntent: CallbackAction<SearchTabIntent>(onInvoke: (intent) {
+                          DefaultTabController.of(context).index = 0;
+                          return null;
+                        }),
+                        BrowseTabIntent: CallbackAction<BrowseTabIntent>(onInvoke: (intent) {
+                          DefaultTabController.of(context).index = 1;
+                          return null;
+                        }),
+                        PlaylistTabIntent: CallbackAction<PlaylistTabIntent>(onInvoke: (intent) {
+                          DefaultTabController.of(context).index = 2;
+                          return null;
+                        }),
+                      },
+                      child: Shortcuts(
+                        shortcuts: const {
+                          SingleActivator(LogicalKeyboardKey.digit1, control: true): SearchTabIntent(),
+                          SingleActivator(LogicalKeyboardKey.digit2, control: true): BrowseTabIntent(),
+                          SingleActivator(LogicalKeyboardKey.digit3, control: true): PlaylistTabIntent(),
                         },
-                        builder: (context, connectionState) {
-                          return Column(
-                            children: [
-                              Expanded(
-                                child: TabBarView(children: [
-                                  Search(api: server),
-                                  Browse(api: server),
-                                  Playlist(
-                                    songCache: songCache,
-                                    api: server,
-                                  ),
-                                ]),
+                        child: Scaffold(
+                          appBar: AppBar(
+                            title: Text(context.t.core.title),
+                            bottom: TabBar(tabs: [
+                              Tooltip(
+                                message: context.t.core.searchTabTooltip,
+                                child: const Tab(icon: Icon(Icons.search)),
                               ),
-                              NowPlaying(
-                                songCache: songCache,
-                                api: server,
+                              Tooltip(
+                                message: context.t.core.masterListTooltip,
+                                child: const Tab(icon: Icon(Icons.library_music)),
+                              ),
+                              Tooltip(
+                                message: context.t.core.playlistTooltip,
+                                child: const Tab(icon: Icon(Icons.mic_external_on)),
+                              ),
+                            ]),
+                            actions: [
+                              Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                                child: Tooltip(
+                                  message: context.t.core.adminModeButtonTooltip,
+                                  child: TextButton(
+                                    onPressed: () {
+                                      if (isAdmin) {
+                                        server.connectionCubit.logout();
+                                      } else {
+                                        showLoginDialog(context, server.connectionCubit);
+                                      }
+                                    },
+                                    child: Text(
+                                        isAdmin ? context.t.core.logoutAdminModeTitle : context.t.core.adminModeTitle),
+                                  ),
+                                ),
+                              ),
+                              Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                                child: Tooltip(
+                                  message: context.t.core.darkModeButtonTooltip,
+                                  child: IconButton(
+                                    onPressed: () {
+                                      setState(() {
+                                        isDark = !isDark;
+                                      });
+                                    },
+                                    isSelected: isDark,
+                                    icon: const Icon(Icons.wb_sunny_outlined),
+                                    selectedIcon: const Icon(Icons.brightness_2_outlined),
+                                  ),
+                                ),
                               ),
                             ],
-                          );
-                        },
-                      );
-                    }),
-                  ),
+                          ),
+                          body: Builder(builder: (context) {
+                            return BlocBuilder<ConnectionCubit, WebSocketConnectionState>(
+                              buildWhen: (previous, current) {
+                                if (current is WebSocketConnectedState &&
+                                    current.isAdmin &&
+                                    (previous is! WebSocketConnectedState || !previous.isAdmin)) {
+                                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                                    content: Text(context.t.login.loggedInSnackbar),
+                                  ));
+                                }
+                                return false;
+                              },
+                              builder: (context, connectionState) {
+                                return Column(
+                                  children: [
+                                    Expanded(
+                                      child: TabBarView(children: [
+                                        Search(api: server),
+                                        Browse(api: server),
+                                        Playlist(
+                                          songCache: songCache,
+                                          api: server,
+                                        ),
+                                      ]),
+                                    ),
+                                    NowPlaying(
+                                      songCache: songCache,
+                                      api: server,
+                                    ),
+                                  ],
+                                );
+                              },
+                            );
+                          }),
+                        ),
+                      ),
+                    );
+                  }),
                 ),
               );
           }
