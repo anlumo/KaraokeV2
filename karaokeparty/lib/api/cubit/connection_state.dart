@@ -1,26 +1,27 @@
 part of 'connection_cubit.dart';
 
-sealed class ConnectionState {
-  const ConnectionState();
+sealed class WebSocketConnectionState {
+  const WebSocketConnectionState();
 }
 
-final class InitialConnectionState extends ConnectionState {
-  const InitialConnectionState();
+final class InitialWebSocketConnectionState extends WebSocketConnectionState {
+  const InitialWebSocketConnectionState();
 }
 
-final class ConnectingState extends ConnectionState {
-  const ConnectingState();
+final class WebSocketConnectingState extends WebSocketConnectionState {
+  const WebSocketConnectingState();
 }
 
-final class ConnectedState extends ConnectionState {
-  const ConnectedState({required this.sink, required this.songCount});
+final class WebSocketConnectedState extends WebSocketConnectionState {
+  const WebSocketConnectedState({required this.sink, required this.songCount, required this.isAdmin});
 
   final WebSocketSink sink;
   final int songCount;
+  final bool isAdmin;
 }
 
-final class ConnectionFailedState extends ConnectionState {
-  const ConnectionFailedState(this.exception);
+final class WebSocketConnectionFailedState extends WebSocketConnectionState {
+  const WebSocketConnectionFailedState(this.exception);
 
   final Exception exception;
 

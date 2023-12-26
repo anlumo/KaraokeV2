@@ -1,0 +1,8 @@
+{
+    "title": "Login as MC",
+    "passwordPrompt": "Password",
+    "loginButton": "Login",
+    "cancelButton": "Cancel",
+    "loggedInSnackbar": "Successfully logged in.",
+    "loginFailedSnackbar": "Failed logging in, invalid password."
+}

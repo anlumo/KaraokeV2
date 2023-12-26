@@ -20,8 +20,8 @@ final class ServerApi {
   }
 
   int? get songCount => switch (connectionCubit.state) {
-        InitialConnectionState() || ConnectingState() || ConnectionFailedState() => null,
-        ConnectedState(:final songCount) => songCount,
+        InitialWebSocketConnectionState() || WebSocketConnectingState() || WebSocketConnectionFailedState() => null,
+        WebSocketConnectedState(:final songCount) => songCount,
       };
 
   Future<List<Song>> search(String text) async {
@@ -64,11 +64,11 @@ final class ServerApi {
 
   Future<UuidValue?> submitSong({required String singer, required int songId}) async {
     switch (connectionCubit.state) {
-      case InitialConnectionState():
-      case ConnectingState():
-      case ConnectionFailedState():
+      case InitialWebSocketConnectionState():
+      case WebSocketConnectingState():
+      case WebSocketConnectionFailedState():
         return null;
-      case ConnectedState(:final sink):
+      case WebSocketConnectedState(:final sink):
         sink.add(jsonEncode({
           'cmd': 'add',
           'song': songId,

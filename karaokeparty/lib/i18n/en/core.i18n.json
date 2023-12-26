@@ -1,6 +1,10 @@
 {
     "title": "Karaoke Party",
     "songCardArtistYear": "$artist ($year)",
+    "adminModeTitle": "MC",
+    "logoutAdminModeTitle": "Logout",
+    "adminModeButtonTooltip": "Login as MC",
+    "darkModeButtonTooltip": "Toggle dark/light mode",
     "connection": {
         "connectingToServerOverlay": "Connecting...",
         "connectionFailedError": "Connection failed",
