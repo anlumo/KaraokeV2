@@ -138,6 +138,7 @@ class _MyAppState extends State<MyApp> {
                             const SingleActivator(LogicalKeyboardKey.digit3, control: true): const PlaylistTabIntent(),
                         },
                         child: Scaffold(
+                          resizeToAvoidBottomInset: false,
                           appBar: AppBar(
                             title: Text(context.t.core.title),
                             bottom: TabBar(tabs: [
