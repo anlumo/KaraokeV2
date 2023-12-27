@@ -35,13 +35,13 @@ class _EmptyStateState extends State<EmptyState> {
     final theme = Theme.of(context);
 
     return Padding(
-      padding: const EdgeInsets.all(32.0),
+      padding: const EdgeInsets.all(16.0),
       child: Column(
         children: [
           Text(
             widget.explanation,
             textAlign: TextAlign.center,
-            style: theme.textTheme.bodyLarge,
+            style: theme.textTheme.bodySmall,
           ),
           const SizedBox(
             height: 16,

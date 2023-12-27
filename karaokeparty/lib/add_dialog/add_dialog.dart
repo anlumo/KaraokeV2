@@ -60,7 +60,26 @@ class _AddDialogState extends State<_AddDialog> {
     );
 
     return AlertDialog(
-      title: Text(context.t.search.addDialog.title),
+      insetPadding: const EdgeInsets.all(8),
+      contentPadding: const EdgeInsets.all(16),
+      title: Row(
+        children: [
+          Expanded(child: Text(context.t.search.addDialog.title)),
+          Tooltip(
+            message: context.t.search.randomPickButton,
+            child: IconButton(
+              onPressed: () async {
+                Navigator.of(context).pop();
+                final songs = await widget.api.fetchRandomSongs(1);
+                if (songs != null && songs.length == 1 && context.mounted) {
+                  showAddSongDialog(context, song: songs.first, api: widget.api, playlistCubit: widget.playlistCubit);
+                }
+              },
+              icon: const Icon(Icons.casino),
+            ),
+          ),
+        ],
+      ),
       actions: [
         TextButton(
             onPressed: () {
@@ -86,30 +105,10 @@ class _AddDialogState extends State<_AddDialog> {
       content: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Row(
-            children: [
-              Expanded(
-                child: SongCard(
-                  song: widget.song,
-                  api: widget.api,
-                  disabled: true,
-                ),
-              ),
-              Tooltip(
-                message: context.t.search.randomPickButton,
-                child: IconButton(
-                  onPressed: () async {
-                    Navigator.of(context).pop();
-                    final songs = await widget.api.fetchRandomSongs(1);
-                    if (songs != null && songs.length == 1 && context.mounted) {
-                      showAddSongDialog(context,
-                          song: songs.first, api: widget.api, playlistCubit: widget.playlistCubit);
-                    }
-                  },
-                  icon: const Icon(Icons.casino),
-                ),
-              ),
-            ],
+          SongCard(
+            song: widget.song,
+            api: widget.api,
+            disabled: true,
           ),
           BlocBuilder<PlaylistCubit, PlaylistState>(
             bloc: widget.playlistCubit,

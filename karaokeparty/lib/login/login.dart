@@ -56,6 +56,8 @@ class _LoginDialogState extends State<_LoginDialog> {
     );
 
     return AlertDialog(
+      insetPadding: const EdgeInsets.all(8),
+      contentPadding: const EdgeInsets.all(16),
       icon: const Icon(Icons.mic),
       title: Text(context.t.login.title),
       actions: [
