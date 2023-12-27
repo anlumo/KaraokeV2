@@ -34,56 +34,53 @@ class _EmptyStateState extends State<EmptyState> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    return Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: Column(
-        children: [
-          Text(
-            widget.explanation,
-            textAlign: TextAlign.center,
-            style: theme.textTheme.bodySmall,
-          ),
-          const SizedBox(
-            height: 16,
-          ),
-          Flexible(
-            child: Skeletonizer(
-              enabled: _songs == null,
-              child: ListView(
-                children: [
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Skeleton.keep(
-                          child: Text(
-                            context.t.search.emptyState.randomPickListTitle,
-                            style: theme.textTheme.labelLarge,
-                          ),
+    return Column(
+      children: [
+        Text(
+          widget.explanation,
+          textAlign: TextAlign.center,
+          style: theme.textTheme.bodySmall,
+        ),
+        const SizedBox(
+          height: 16,
+        ),
+        Flexible(
+          child: Skeletonizer(
+            enabled: _songs == null,
+            child: ListView(
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: Skeleton.keep(
+                        child: Text(
+                          context.t.search.emptyState.randomPickListTitle,
+                          style: theme.textTheme.labelLarge,
                         ),
                       ),
-                      TextButton(
-                        onPressed: () {
-                          setState(() {
-                            _songs = null;
-                            widget.api.fetchRandomSongs(suggestionsCount).then((songs) => setState(() {
-                                  _songs = songs;
-                                }));
-                          });
-                        },
-                        child: SizedBox(
-                            height: kMinInteractiveDimension,
-                            child: Center(child: Text(context.t.search.emptyState.rerollRandom))),
-                      ),
-                    ],
-                  ),
-                  ...(_songs ?? List.generate(suggestionsCount, (_) => Song.placeholder()))
-                      .map((song) => Skeleton.leaf(child: SongCard(song: song, api: widget.api))),
-                ],
-              ),
+                    ),
+                    TextButton(
+                      onPressed: () {
+                        setState(() {
+                          _songs = null;
+                          widget.api.fetchRandomSongs(suggestionsCount).then((songs) => setState(() {
+                                _songs = songs;
+                              }));
+                        });
+                      },
+                      child: SizedBox(
+                          height: kMinInteractiveDimension,
+                          child: Center(child: Text(context.t.search.emptyState.rerollRandom))),
+                    ),
+                  ],
+                ),
+                ...(_songs ?? List.generate(suggestionsCount, (_) => Song.placeholder()))
+                    .map((song) => Skeleton.leaf(child: SongCard(song: song, api: widget.api))),
+              ],
             ),
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }
