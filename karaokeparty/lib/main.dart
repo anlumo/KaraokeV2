@@ -247,7 +247,11 @@ class _MyAppState extends State<MyApp> {
                                             padding: const EdgeInsets.symmetric(horizontal: 4.0),
                                             child: Column(
                                               children: [
-                                                Expanded(child: Playlist(songCache: songCache, api: server)),
+                                                Expanded(
+                                                  child: FocusTraversalGroup(
+                                                    child: Playlist(songCache: songCache, api: server),
+                                                  ),
+                                                ),
                                                 NowPlaying(songCache: songCache, api: server),
                                               ],
                                             ),
