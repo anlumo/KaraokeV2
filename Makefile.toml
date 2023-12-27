@@ -22,3 +22,22 @@ flutter build web --web-renderer canvaskit
 [tasks.build-server]
 command = "cargo"
 args = ["build", "--bin", "karaoke-server", "--release"]
+
+[tasks.serve]
+command = "cargo"
+args = [
+    "run",
+    "--bin",
+    "karaoke-server",
+    "--",
+    "--db",
+    "songs.db",
+    "--playlist",
+    "playlist.json",
+    "--password",
+    "abc",
+    "--cover-path",
+    "MasterCollection",
+    "--web-app",
+    "karaokeparty/build/web",
+]
