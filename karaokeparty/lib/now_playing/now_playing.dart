@@ -16,26 +16,31 @@ class NowPlaying extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    return Card(
-      color: theme.colorScheme.secondary,
-      elevation: 5,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            context.t.playlist.nowPlayingTitle,
-            style: theme.textTheme.labelLarge!.copyWith(color: theme.colorScheme.onSecondary),
+    return BlocBuilder<PlaylistCubit, PlaylistState>(
+      builder: (context, state) {
+        if (state.nowPlaying == null) {
+          return const SizedBox();
+        }
+        return Card(
+          color: theme.colorScheme.secondary,
+          elevation: 5,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                context.t.playlist.nowPlayingTitle,
+                style: theme.textTheme.labelLarge!.copyWith(color: theme.colorScheme.onSecondary),
+              ),
+              PlaylistSongCard(
+                songCache: songCache,
+                entry: state.nowPlaying!,
+                api: api,
+                predictedPlayTime: null,
+              ),
+            ],
           ),
-          BlocBuilder<PlaylistCubit, PlaylistState>(
-            builder: (context, snapshot) {
-              if (snapshot.nowPlaying == null) {
-                return const SizedBox();
-              }
-              return PlaylistSongCard(songCache: songCache, entry: snapshot.nowPlaying!, api: api);
-            },
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 }

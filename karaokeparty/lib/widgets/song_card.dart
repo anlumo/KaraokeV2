@@ -4,6 +4,7 @@ import 'package:karaokeparty/add_dialog/add_dialog.dart';
 import 'package:karaokeparty/api/api.dart';
 import 'package:karaokeparty/api/song_cache.dart';
 import 'package:karaokeparty/i18n/strings.g.dart';
+import 'package:karaokeparty/main.dart';
 import 'package:karaokeparty/model/playlist_entry.dart';
 import 'package:karaokeparty/model/song.dart';
 import 'package:karaokeparty/widgets/lyrics.dart';
@@ -11,12 +12,19 @@ import 'package:skeletonizer/skeletonizer.dart';
 
 class SongCard extends StatelessWidget {
   SongCard(
-      {required this.song, required this.api, this.singer, this.disabled = false, this.selected = false, super.key});
+      {required this.song,
+      required this.api,
+      this.singer,
+      this.disabled = false,
+      this.selected = false,
+      this.predictedPlaytime,
+      super.key});
 
   final Song song;
   final title = ConstraintId('title');
   final coverImage = ConstraintId('coverImage');
   final String? singer;
+  final DateTime? predictedPlaytime;
   final ServerApi api;
   final bool disabled;
   final bool selected;
@@ -24,6 +32,9 @@ class SongCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+
+    final predictedRelativePlayTime = predictedPlaytime?.difference(DateTime.now().toUtc());
+    log.d('singer $singer absolute playtime $predictedPlaytime relative playtime $predictedRelativePlayTime');
 
     return ConstrainedBox(
       constraints: const BoxConstraints(minWidth: 380.0, maxHeight: 96, minHeight: 96),
@@ -65,7 +76,9 @@ class SongCard extends StatelessWidget {
                 bottom: parent.bottom.margin(8),
               ),
               Text(
-                '${song.duration ~/ 60}:${(song.duration % 60).round().toString().padLeft(2, '0')}',
+                predictedRelativePlayTime != null && !predictedRelativePlayTime.isNegative
+                    ? context.t.playlist.predictedPlayTimeInMinutes(min: predictedRelativePlayTime.inMinutes)
+                    : '${song.duration ~/ 60}:${(song.duration % 60).round().toString().padLeft(2, '0')}',
                 textAlign: TextAlign.end,
                 style: theme.textTheme.labelSmall!.copyWith(overflow: TextOverflow.ellipsis),
               ).applyConstraint(
@@ -156,6 +169,7 @@ class PlaylistSongCard extends StatelessWidget {
     required this.songCache,
     required this.entry,
     required this.api,
+    required this.predictedPlayTime,
     this.selected = false,
     super.key,
   });
@@ -164,6 +178,7 @@ class PlaylistSongCard extends StatelessWidget {
   final PlaylistEntry entry;
   final ServerApi api;
   final bool selected;
+  final DateTime? predictedPlayTime;
 
   @override
   Widget build(BuildContext context) {
@@ -175,12 +190,14 @@ class PlaylistSongCard extends StatelessWidget {
         api: api,
         disabled: true,
         selected: selected,
+        predictedPlaytime: predictedPlayTime,
       );
     }
 
     return FutureBuilder(
       future: Future.value(songCache.get(entry.song)),
       builder: (context, snapshot) {
+        log.d('singer: ${entry.singer} song = $snapshot');
         final theme = Theme.of(context);
 
         if (!snapshot.hasData) {
@@ -206,6 +223,7 @@ class PlaylistSongCard extends StatelessWidget {
           api: api,
           disabled: true,
           selected: selected,
+          predictedPlaytime: predictedPlayTime,
         );
       },
     );

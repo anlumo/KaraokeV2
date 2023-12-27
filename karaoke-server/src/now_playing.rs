@@ -151,35 +151,37 @@ impl Playlist {
             .enumerate()
             .find_map(|(idx, entry)| (entry.id == id).then_some(idx))
         {
-            let new_playing = queue.list.remove(entry);
-            let old_playing = if let Some(new_playing) = new_playing {
-                queue.now_playing.replace(new_playing)
-            } else {
-                queue.now_playing.take()
-            };
-
-            // Update intermission record
-            if let Some(old_playing) = old_playing {
-                let duration = OffsetDateTime::now_utc() - old_playing.predicted_end;
-                // Ignore breaks that are 5 minutes or longer, since those aren't representative.
-                // Note that this might include breaks between whole parties, so it could be months as well.
-                if duration < Duration::minutes(5) {
-                    queue.intermission_count += 1;
-                    queue.intermission_duration += duration;
+            match index.search_song(&format!("rowid:{}", queue.list[entry].song), 1) {
+                Err(err) => {
+                    log::error!("Fetching song for song log failed: {err:?}");
                 }
-            }
+                Ok(songs) => {
+                    let new_playing = queue.list.remove(entry);
+                    let old_playing = if let Some(mut new_playing) = new_playing {
+                        new_playing.predicted_end =
+                            OffsetDateTime::now_utc() + Duration::seconds_f64(songs[0].duration);
+                        queue.now_playing.replace(new_playing)
+                    } else {
+                        queue.now_playing.take()
+                    };
 
-            // Update playlist and notify listeners
-            Self::did_change(&mut queue, &self.persist_path, index).await?;
-
-            // Write song log
-            if let (Some(now_playing), Some(song_log)) = (&queue.now_playing, &self.song_log) {
-                let timestamp = OffsetDateTime::now_utc().format(&Rfc3339).unwrap();
-                match index.search_song(&format!("rowid:{}", now_playing.song), 1) {
-                    Err(err) => {
-                        log::error!("Fetching song for song log failed: {err:?}");
+                    // Update intermission record
+                    if let Some(old_playing) = old_playing {
+                        let duration = OffsetDateTime::now_utc() - old_playing.predicted_end;
+                        // Ignore breaks that are 5 minutes or longer, since those aren't representative.
+                        // Note that this might include breaks between whole parties, so it could be months as well.
+                        if duration < Duration::minutes(5) && duration.is_positive() {
+                            queue.intermission_count += 1;
+                            queue.intermission_duration += duration;
+                        }
                     }
-                    Ok(songs) => {
+
+                    // Update playlist and notify listeners
+                    Self::did_change(&mut queue, &self.persist_path, index).await?;
+
+                    // Write song log
+                    if let Some(song_log) = &self.song_log {
+                        let timestamp = OffsetDateTime::now_utc().format(&Rfc3339).unwrap();
                         if songs.is_empty() {
                             log::error!("Can't write song log: song not found!");
                         } else {
@@ -316,22 +318,19 @@ impl Playlist {
                 .join(" OR "),
             inner.list.len(),
         )?;
-        let mut timestamp = None;
+        let mut timestamp = inner
+            .now_playing
+            .as_ref()
+            .map(|entry| entry.predicted_end)
+            .unwrap_or_else(OffsetDateTime::now_utc);
         let average_intermission = inner
             .intermission_duration
             .checked_div(inner.intermission_count as _)
             .unwrap_or_default();
         for playlist_item in &mut inner.list {
             if let Some(song) = songs.iter().find(|&song| song.row_id == playlist_item.song) {
-                if let Some(last_timestamp) = timestamp {
-                    timestamp = Some(
-                        last_timestamp
-                            + average_intermission
-                            + Duration::seconds_f64(song.duration),
-                    );
-                } else {
-                    timestamp = Some(playlist_item.predicted_end);
-                }
+                timestamp += average_intermission + Duration::seconds_f64(song.duration);
+                playlist_item.predicted_end = timestamp;
             }
         }
 

@@ -181,6 +181,7 @@ class _PlaylistState extends State<Playlist> {
                                               entry: item,
                                               api: widget.api,
                                               selected: _selectedItem == i,
+                                              predictedPlayTime: i > 0 ? _songQueue![i - 1].predictedEnd : null,
                                             ),
                                           ),
                                         ),
@@ -260,7 +261,12 @@ class _PlaylistState extends State<Playlist> {
                     primary: true,
                     items: _songQueue!,
                     itemBuilder: (context, itemAnimation, item, i) {
-                      return PlaylistSongCard(songCache: widget.songCache, entry: item, api: widget.api);
+                      return PlaylistSongCard(
+                        songCache: widget.songCache,
+                        entry: item,
+                        api: widget.api,
+                        predictedPlayTime: i > 0 ? _songQueue![i - 1].predictedEnd : null,
+                      );
                     },
                     areItemsTheSame: (a, b) => a.id == b.id,
                   );

@@ -69,8 +69,8 @@ class ConnectionCubit extends Cubit<WebSocketConnectionState> {
         log.d('Received websocket message $json');
         try {
           PlaylistEntry? nowPlaying;
-          if (json['now_playing'] != null) {
-            nowPlaying = PlaylistEntry.fromJson(json['now_playing']);
+          if (json['nowPlaying'] != null) {
+            nowPlaying = PlaylistEntry.fromJson(json['nowPlaying']);
           }
           List<PlaylistEntry> songQueue = (json['list'] as List<dynamic>)
               .map((entry) => PlaylistEntry.fromJson(entry as Map<String, dynamic>))
