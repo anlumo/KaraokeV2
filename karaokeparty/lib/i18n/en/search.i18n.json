@@ -4,6 +4,7 @@
     "addDialog": {
         "title": "Submit your song request",
         "singerTextTitle": "Your name",
+        "playPrediction": "Estimated time to the song is $min minutes.",
         "submitButton": "Submit",
         "cancelButton": "Cancel"
     },

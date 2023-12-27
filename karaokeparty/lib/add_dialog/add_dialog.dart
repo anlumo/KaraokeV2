@@ -1,17 +1,21 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:karaokeparty/api/api.dart';
 import 'package:karaokeparty/api/cubit/connection_cubit.dart';
+import 'package:karaokeparty/api/cubit/playlist_cubit.dart';
 import 'package:karaokeparty/i18n/strings.g.dart';
 import 'package:karaokeparty/model/song.dart';
 import 'package:karaokeparty/widgets/song_card.dart';
 import 'package:rounded_loading_button/rounded_loading_button.dart';
+import 'package:timer_builder/timer_builder.dart';
 import 'package:uuid/uuid.dart';
 
 class _AddDialog extends StatefulWidget {
-  const _AddDialog({required this.song, required this.api});
+  const _AddDialog({required this.song, required this.api, required this.playlistCubit});
 
   final Song song;
   final ServerApi api;
+  final PlaylistCubit playlistCubit;
 
   @override
   State<_AddDialog> createState() => _AddDialogState();
@@ -98,7 +102,8 @@ class _AddDialogState extends State<_AddDialog> {
                     Navigator.of(context).pop();
                     final songs = await widget.api.fetchRandomSongs(1);
                     if (songs != null && songs.length == 1 && context.mounted) {
-                      showAddSongDialog(context, song: songs.first, api: widget.api);
+                      showAddSongDialog(context,
+                          song: songs.first, api: widget.api, playlistCubit: widget.playlistCubit);
                     }
                   },
                   icon: const Icon(Icons.casino),
@@ -106,13 +111,28 @@ class _AddDialogState extends State<_AddDialog> {
               ),
             ],
           ),
-          TextField(
-            controller: _singerController,
-            autofocus: true,
-            decoration: InputDecoration(
-              labelText: context.t.search.addDialog.singerTextTitle,
-            ),
-            onSubmitted: (text) => _submit(context),
+          BlocBuilder<PlaylistCubit, PlaylistState>(
+            bloc: widget.playlistCubit,
+            builder: (context, state) {
+              String? helperText;
+              if (state.songQueue.isNotEmpty) {
+                final prediction = state.songQueue.last.predictedEnd?.difference(DateTime.now().toUtc());
+                if (prediction != null) {
+                  helperText = context.t.search.addDialog.playPrediction(min: prediction.inMinutes);
+                }
+              }
+              return TimerBuilder.periodic(const Duration(seconds: 10), builder: (context) {
+                return TextField(
+                  controller: _singerController,
+                  autofocus: true,
+                  decoration: InputDecoration(
+                    labelText: context.t.search.addDialog.singerTextTitle,
+                    helperText: helperText,
+                  ),
+                  onSubmitted: (text) => _submit(context),
+                );
+              });
+            },
           ),
         ],
       ),
@@ -124,8 +144,13 @@ Future<void> showAddSongDialog(
   BuildContext context, {
   required Song song,
   required ServerApi api,
+  required PlaylistCubit playlistCubit,
 }) =>
     showDialog<UuidValue>(
       context: context,
-      builder: (context) => _AddDialog(song: song, api: api),
+      builder: (context) => _AddDialog(
+        song: song,
+        api: api,
+        playlistCubit: playlistCubit,
+      ),
     );

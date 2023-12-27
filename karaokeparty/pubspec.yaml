@@ -22,6 +22,7 @@ dependencies:
   rounded_loading_button: ^2.1.0
   skeletonizer: ^0.8.0
   slang: ^3.28.0
+  timer_builder: ^2.0.0
   uuid: ^4.2.2
   web_socket_channel: ^2.4.0
 

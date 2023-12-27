@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_constraintlayout/flutter_constraintlayout.dart';
 import 'package:karaokeparty/add_dialog/add_dialog.dart';
 import 'package:karaokeparty/api/api.dart';
+import 'package:karaokeparty/api/cubit/playlist_cubit.dart';
 import 'package:karaokeparty/api/song_cache.dart';
 import 'package:karaokeparty/i18n/strings.g.dart';
 import 'package:karaokeparty/main.dart';
@@ -9,6 +11,7 @@ import 'package:karaokeparty/model/playlist_entry.dart';
 import 'package:karaokeparty/model/song.dart';
 import 'package:karaokeparty/widgets/lyrics.dart';
 import 'package:skeletonizer/skeletonizer.dart';
+import 'package:timer_builder/timer_builder.dart';
 
 class SongCard extends StatelessWidget {
   SongCard(
@@ -33,9 +36,6 @@ class SongCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    final predictedRelativePlayTime = predictedPlaytime?.difference(DateTime.now().toUtc());
-    log.d('singer $singer absolute playtime $predictedPlaytime relative playtime $predictedRelativePlayTime');
-
     return ConstrainedBox(
       constraints: const BoxConstraints(minWidth: 380.0, maxHeight: 96, minHeight: 96),
       child: Card(
@@ -48,7 +48,7 @@ class SongCard extends StatelessWidget {
           onTap: disabled
               ? null
               : () {
-                  showAddSongDialog(context, song: song, api: api);
+                  showAddSongDialog(context, song: song, api: api, playlistCubit: context.read<PlaylistCubit>());
                 },
           child: ConstraintLayout(
             showHelperWidgets: true,
@@ -75,13 +75,16 @@ class SongCard extends StatelessWidget {
                 width: matchConstraint,
                 bottom: parent.bottom.margin(8),
               ),
-              Text(
-                predictedRelativePlayTime != null && !predictedRelativePlayTime.isNegative
-                    ? context.t.playlist.predictedPlayTimeInMinutes(min: predictedRelativePlayTime.inMinutes)
-                    : '${song.duration ~/ 60}:${(song.duration % 60).round().toString().padLeft(2, '0')}',
-                textAlign: TextAlign.end,
-                style: theme.textTheme.labelSmall!.copyWith(overflow: TextOverflow.ellipsis),
-              ).applyConstraint(
+              TimerBuilder.periodic(const Duration(seconds: 10), builder: (context) {
+                final predictedRelativePlayTime = predictedPlaytime?.difference(DateTime.now().toUtc());
+                return Text(
+                  predictedRelativePlayTime != null && !predictedRelativePlayTime.isNegative
+                      ? context.t.playlist.predictedPlayTimeInMinutes(min: predictedRelativePlayTime.inMinutes)
+                      : '${song.duration ~/ 60}:${(song.duration % 60).round().toString().padLeft(2, '0')}',
+                  textAlign: TextAlign.end,
+                  style: theme.textTheme.labelSmall!.copyWith(overflow: TextOverflow.ellipsis),
+                );
+              }).applyConstraint(
                 right: coverImage.left.margin(8),
                 bottom: parent.bottom.margin(8),
               ),

@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_constraintlayout/flutter_constraintlayout.dart';
 import 'package:karaokeparty/add_dialog/add_dialog.dart';
 import 'package:karaokeparty/api/api.dart';
+import 'package:karaokeparty/api/cubit/playlist_cubit.dart';
 import 'package:karaokeparty/i18n/strings.g.dart';
 import 'package:karaokeparty/model/song.dart';
 import 'package:karaokeparty/search/empty_state.dart';
@@ -69,7 +71,12 @@ class _SearchState extends State<Search> {
                           onPressed: () async {
                             final songs = await widget.api.fetchRandomSongs(1);
                             if (songs != null && songs.length == 1 && context.mounted) {
-                              showAddSongDialog(context, song: songs.first, api: widget.api);
+                              showAddSongDialog(
+                                context,
+                                song: songs.first,
+                                api: widget.api,
+                                playlistCubit: context.read<PlaylistCubit>(),
+                              );
                             }
                           },
                           icon: const Icon(Icons.casino)),
