@@ -2,6 +2,8 @@
 /songs
 /MasterCollection
 *.db
+/playlist.json
+/song_log.csv
 
 # Miscellaneous
 *.class
