@@ -24,6 +24,8 @@ final log = Logger(
   ),
 );
 
+const double wideLayoutSidebarWidth = 450;
+
 void main() {
   log.d('Starting application');
   runApp(TranslationProvider(child: const MyApp()));
@@ -102,13 +104,15 @@ class _MyAppState extends State<MyApp> {
                 ],
               );
             case WebSocketConnectedState(:final isAdmin):
+              final compactLayout = MediaQuery.sizeOf(context).width <= wideLayoutSidebarWidth * 2;
+
               return MultiBlocProvider(
                 providers: [
                   BlocProvider.value(value: server.playlist),
                   BlocProvider.value(value: server.connectionCubit),
                 ],
                 child: DefaultTabController(
-                  length: 3,
+                  length: compactLayout ? 3 : 2,
                   child: Builder(builder: (context) {
                     return Actions(
                       actions: {
@@ -120,16 +124,18 @@ class _MyAppState extends State<MyApp> {
                           DefaultTabController.of(context).index = 1;
                           return null;
                         }),
-                        PlaylistTabIntent: CallbackAction<PlaylistTabIntent>(onInvoke: (intent) {
-                          DefaultTabController.of(context).index = 2;
-                          return null;
-                        }),
+                        if (compactLayout)
+                          PlaylistTabIntent: CallbackAction<PlaylistTabIntent>(onInvoke: (intent) {
+                            DefaultTabController.of(context).index = 2;
+                            return null;
+                          }),
                       },
                       child: Shortcuts(
-                        shortcuts: const {
-                          SingleActivator(LogicalKeyboardKey.digit1, control: true): SearchTabIntent(),
-                          SingleActivator(LogicalKeyboardKey.digit2, control: true): BrowseTabIntent(),
-                          SingleActivator(LogicalKeyboardKey.digit3, control: true): PlaylistTabIntent(),
+                        shortcuts: {
+                          const SingleActivator(LogicalKeyboardKey.digit1, control: true): const SearchTabIntent(),
+                          const SingleActivator(LogicalKeyboardKey.digit2, control: true): const BrowseTabIntent(),
+                          if (compactLayout)
+                            const SingleActivator(LogicalKeyboardKey.digit3, control: true): const PlaylistTabIntent(),
                         },
                         child: Scaffold(
                           appBar: AppBar(
@@ -143,10 +149,14 @@ class _MyAppState extends State<MyApp> {
                                 message: context.t.core.masterListTooltip,
                                 child: const Tab(icon: Icon(Icons.library_music)),
                               ),
-                              Tooltip(
-                                message: context.t.core.playlistTooltip,
-                                child: const Tab(icon: Icon(Icons.mic_external_on)),
-                              ),
+                              compactLayout
+                                  ? Tooltip(
+                                      message: context.t.core.playlistTooltip,
+                                      child: const Tab(icon: Icon(Icons.mic_external_on)),
+                                    )
+                                  : const SizedBox(
+                                      width: wideLayoutSidebarWidth,
+                                    ),
                             ]),
                             actions: [
                               Padding(
@@ -192,29 +202,61 @@ class _MyAppState extends State<MyApp> {
                                     (previous is! WebSocketConnectedState || !previous.isAdmin)) {
                                   ScaffoldMessenger.of(context).showSnackBar(SnackBar(
                                     content: Text(context.t.login.loggedInSnackbar),
+                                    showCloseIcon: true,
                                   ));
                                 }
                                 return false;
                               },
                               builder: (context, connectionState) {
-                                return Column(
-                                  children: [
-                                    Expanded(
-                                      child: TabBarView(children: [
-                                        Search(api: server),
-                                        Browse(api: server),
-                                        Playlist(
-                                          songCache: songCache,
-                                          api: server,
+                                if (compactLayout) {
+                                  return Column(
+                                    children: [
+                                      Expanded(
+                                        child: TabBarView(children: [
+                                          Search(api: server),
+                                          Browse(api: server),
+                                          Playlist(
+                                            songCache: songCache,
+                                            api: server,
+                                          ),
+                                        ]),
+                                      ),
+                                      NowPlaying(
+                                        songCache: songCache,
+                                        api: server,
+                                      ),
+                                    ],
+                                  );
+                                } else {
+                                  final theme = Theme.of(context);
+                                  return Row(
+                                    children: [
+                                      Expanded(
+                                        child: TabBarView(
+                                          children: [
+                                            Search(api: server),
+                                            Browse(api: server),
+                                          ],
                                         ),
-                                      ]),
-                                    ),
-                                    NowPlaying(
-                                      songCache: songCache,
-                                      api: server,
-                                    ),
-                                  ],
-                                );
+                                      ),
+                                      ColoredBox(
+                                        color: theme.colorScheme.secondaryContainer,
+                                        child: SizedBox(
+                                          width: wideLayoutSidebarWidth,
+                                          child: Padding(
+                                            padding: const EdgeInsets.symmetric(horizontal: 4.0),
+                                            child: Column(
+                                              children: [
+                                                Expanded(child: Playlist(songCache: songCache, api: server)),
+                                                NowPlaying(songCache: songCache, api: server),
+                                              ],
+                                            ),
+                                          ),
+                                        ),
+                                      )
+                                    ],
+                                  );
+                                }
                               },
                             );
                           }),
