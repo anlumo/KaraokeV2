@@ -7,6 +7,7 @@ final class Song {
   final double duration;
   final String? lyrics;
   final String? coverPath;
+  final String audioPath;
 
   Song({
     required this.id,
@@ -17,6 +18,7 @@ final class Song {
     required this.duration,
     required this.lyrics,
     required this.coverPath,
+    required this.audioPath,
   });
 
   Song.placeholder()
@@ -27,15 +29,17 @@ final class Song {
         year = 1234,
         duration = 260.0,
         lyrics = null,
-        coverPath = null;
+        coverPath = null,
+        audioPath = '';
 
   Song.fromJson(Map<String, dynamic> json)
-      : id = json['row_id'],
+      : id = json['rowId'],
         title = json['title'],
         artist = json['artist'],
         language = json['language'],
         year = json['year'] as int?,
         duration = json['duration'],
         lyrics = json['lyrics'],
-        coverPath = json['cover_path'];
+        coverPath = json['coverPath'],
+        audioPath = json['audioPath'];
 }

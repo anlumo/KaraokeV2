@@ -70,6 +70,7 @@ async fn handle_socket(socket: WebSocket, who: SocketAddr, state: Arc<AppState>)
                                             } else if password == state.password {
                                                 authenticated = true;
                                             }
+                                            log::debug!("[{who:?}] Tried to authenticate, result = {authenticated}");
                                             sender.send(Message::Binary(vec![authenticated as u8])).await.map_err(anyhow::Error::from)
                                         }
                                         Command::Add { song, singer } => {

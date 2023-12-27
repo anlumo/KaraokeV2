@@ -9,6 +9,7 @@ environment:
 
 dependencies:
   animated_list_plus: ^0.5.2
+  audioplayers: ^5.2.1
   flutter:
     sdk: flutter
   flutter_bloc: ^8.1.3

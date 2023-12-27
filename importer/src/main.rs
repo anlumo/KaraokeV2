@@ -18,7 +18,7 @@ struct Args {
     #[clap(short, long)]
     db: PathBuf,
 
-    /// How many path components to remove from cover paths to match the web server configuration.
+    /// How many path components to remove from media paths to match the web server configuration.
     #[clap(short, long, default_value_t = 0)]
     strip_components: usize,
 }
@@ -32,7 +32,7 @@ fn parse_txt(
     let full_path = path.as_ref().canonicalize()?;
     let song = loader::parse_txt_song(&path).map_err(|err| anyhow::anyhow!("{err:?}"))?;
 
-    let Source::Local(audio_path) = song.header.audio_path else {
+    let Source::Local(audio_path) = &song.header.audio_path else {
         return Err(anyhow::anyhow!(
             "{:?} does not have a local audio track.",
             path.as_ref()
@@ -57,6 +57,17 @@ fn parse_txt(
             .to_owned(),
         _ => panic!("Song {} has remote cover", song.header.title),
     });
+
+    let audio_path = match &song.header.audio_path {
+        Source::Local(audio_path) => audio_path
+            .components()
+            .skip(strip_components)
+            .collect::<PathBuf>()
+            .as_os_str()
+            .as_bytes()
+            .to_owned(),
+        _ => panic!("Song {} has remote audio", song.header.title),
+    };
 
     let changes = insert_stmt.execute((
         full_path.as_os_str().as_bytes(),
@@ -83,6 +94,7 @@ fn parse_txt(
             .collect::<Vec<_>>()
             .join("\n"),
         cover_path,
+        audio_path,
     ))?;
 
     if changes == 1 {
@@ -139,7 +151,8 @@ fn main() -> anyhow::Result<()> {
         year INTEGER,
         duration REAL NOT NULL,
         lyrics TEXT,
-        cover_path BLOB
+        cover_path BLOB,
+        audio_path BLOB
     )"#,
         (),
     )?;
@@ -156,8 +169,8 @@ fn main() -> anyhow::Result<()> {
         let mut new_songs = HashSet::new();
 
         let mut insert_stmt = tx.prepare(
-            r#"INSERT INTO song (path, title, artist, language, year, duration, lyrics, cover_path) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)
-            ON CONFLICT (path) DO UPDATE SET title=?2, artist=?3, language=?4, year=?5, duration=?6, lyrics=?7, cover_path=?8"#)?;
+            r#"INSERT INTO song (path, title, artist, language, year, duration, lyrics, cover_path, audio_path) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9)
+            ON CONFLICT (path) DO UPDATE SET title=?2, artist=?3, language=?4, year=?5, duration=?6, lyrics=?7, cover_path=?8, audio_path=?9"#)?;
         walk_dir(
             args.path,
             args.strip_components,

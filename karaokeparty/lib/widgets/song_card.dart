@@ -9,6 +9,7 @@ import 'package:karaokeparty/i18n/strings.g.dart';
 import 'package:karaokeparty/main.dart';
 import 'package:karaokeparty/model/playlist_entry.dart';
 import 'package:karaokeparty/model/song.dart';
+import 'package:karaokeparty/widgets/audio_player.dart';
 import 'package:karaokeparty/widgets/lyrics.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 import 'package:timer_builder/timer_builder.dart';
@@ -26,6 +27,7 @@ class SongCard extends StatelessWidget {
   final Song song;
   final title = ConstraintId('title');
   final coverImage = ConstraintId('coverImage');
+  final playAudio = ConstraintId('playAudio');
   final String? singer;
   final DateTime? predictedPlaytime;
   final ServerApi api;
@@ -130,7 +132,15 @@ class SongCard extends StatelessWidget {
                         showLyricsDialog(context, song);
                       },
                       icon: const Icon(Icons.lyrics)),
-                ).applyConstraint(right: coverImage.left.margin(8), top: parent.top.margin(8)),
+                ).applyConstraint(right: playAudio.left.margin(4), top: parent.top.margin(4)),
+              Tooltip(
+                message: context.t.core.playAudioButton,
+                child: IconButton(
+                    onPressed: () {
+                      showAudioPlayer(context, song);
+                    },
+                    icon: const Icon(Icons.music_note)),
+              ).applyConstraint(id: playAudio, right: coverImage.left.margin(8), top: parent.top.margin(4)),
             ],
           ),
         ),
@@ -139,7 +149,7 @@ class SongCard extends StatelessWidget {
   }
 
   Image coverImageWidget() => Image.network(
-        '${serverHost.covers}/${song.coverPath}',
+        '${serverHost.media}/${song.coverPath}',
         loadingBuilder: (BuildContext context, Widget child, ImageChunkEvent? loadingProgress) {
           if (loadingProgress == null) {
             return child;

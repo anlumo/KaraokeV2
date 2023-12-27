@@ -9,6 +9,7 @@ use tantivy::{
 use crate::Pagination;
 
 #[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct Song {
     pub row_id: i64,
     pub title: String,
@@ -22,6 +23,7 @@ pub struct Song {
     pub lyrics: Option<String>,
     #[serde(default)]
     pub cover_path: Option<String>,
+    pub audio_path: String,
 }
 
 pub struct SearchIndex {
@@ -33,6 +35,7 @@ pub struct SearchIndex {
     lyrics_field: Field,
     duration_field: Field,
     cover_field: Field,
+    audio_field: Field,
 
     reader: IndexReader,
     query_parser: QueryParser,
@@ -50,6 +53,7 @@ impl SearchIndex {
         let lyrics_field = schema_builder.add_text_field("lyrics", TEXT | STORED);
         let duration_field = schema_builder.add_f64_field("duration", STORED);
         let cover_field = schema_builder.add_text_field("cover", STORED);
+        let audio_field = schema_builder.add_text_field("audio", STORED);
         let schema = schema_builder.build();
 
         let mut index = Index::builder()
@@ -85,6 +89,7 @@ impl SearchIndex {
             if let Some(cover) = &song.cover_path {
                 doc.add_text(cover_field, cover);
             }
+            doc.add_text(audio_field, &song.audio_path);
             index_writer.add_document(doc)?;
         }
 
@@ -110,6 +115,7 @@ impl SearchIndex {
             lyrics_field,
             duration_field,
             cover_field,
+            audio_field,
             reader,
             query_parser,
         })
@@ -159,6 +165,10 @@ impl SearchIndex {
                     cover_path: song
                         .get_first(self.cover_field)
                         .map(|cover| cover.as_text().unwrap().to_owned()),
+                    audio_path: song
+                        .get_first(self.audio_field)
+                        .map(|cover| cover.as_text().unwrap().to_owned())
+                        .unwrap_or_default(),
                 };
                 Ok(song)
             })

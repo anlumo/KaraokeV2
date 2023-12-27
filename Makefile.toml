@@ -36,10 +36,24 @@ args = [
     "playlist.json",
     "--password",
     "abc",
-    "--cover-path",
+    "--media-path",
     "MasterCollection",
     "--web-app",
     "karaokeparty/build/web",
     "--song-log",
     "song_log.csv",
+]
+
+[tasks.import]
+command = "cargo"
+args = [
+    "run",
+    "--bin",
+    "importer",
+    "--",
+    "--db",
+    "songs.db",
+    "-s",
+    "6",
+    "MasterCollection/Songs",
 ]

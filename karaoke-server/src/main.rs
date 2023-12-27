@@ -50,7 +50,7 @@ struct Args {
     verbose: bool,
     /// Path to the directory structure for the covers.
     #[clap(short, long)]
-    cover_path: PathBuf,
+    media_path: PathBuf,
     /// Path to the web app (directory containing index.html).
     #[clap(short, long)]
     web_app: PathBuf,
@@ -88,12 +88,13 @@ async fn main() -> anyhow::Result<()> {
         let tx = conn.transaction()?;
 
         let mut stmt = tx.prepare(
-            "SELECT rowid, title, artist, language, year, duration, lyrics, cover_path FROM song ORDER BY title COLLATE NOCASE",
+            "SELECT rowid, title, artist, language, year, duration, lyrics, cover_path, audio_path FROM song ORDER BY title COLLATE NOCASE",
         )?;
         song_db = stmt
             .query_map((), |row| {
                 let row_id = row.get("rowid")?;
                 let cover_path = row.get::<_, Option<Vec<u8>>>("cover_path")?;
+                let audio_path = row.get::<_, Option<Vec<u8>>>("audio_path")?;
                 Ok(Song {
                     row_id,
                     title: row.get("title")?,
@@ -103,6 +104,7 @@ async fn main() -> anyhow::Result<()> {
                     duration: row.get("duration")?,
                     lyrics: row.get("lyrics")?,
                     cover_path: cover_path.map(urlencode_path),
+                    audio_path: urlencode_path(audio_path.unwrap()),
                 })
             })?
             .filter_map(|result| match result {
@@ -138,7 +140,7 @@ async fn main() -> anyhow::Result<()> {
         .route("/api/random_songs", get(get_random_songs))
         .route("/api/song_count", get(get_song_count))
         .route("/ws", get(ws_handler))
-        .nest_service("/cover", ServeDir::new(args.cover_path))
+        .nest_service("/media", ServeDir::new(args.media_path))
         .nest_service("/", ServeDir::new(args.web_app))
         .with_state(state)
         .layer(

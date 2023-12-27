@@ -5,6 +5,7 @@
     "playlistTooltip": "Current playlist",
     "songCardArtistYear": "$artist ($year)",
     "showLyricsButton": "Show lyrics",
+    "playAudioButton": "Play audio",
     "coverAction": "Click to magnify",
     "adminModeTitle": "MC",
     "logoutAdminModeTitle": "Logout",
