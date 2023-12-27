@@ -109,36 +109,51 @@ class _AudioPlayerState extends State<_AudioPlayer> {
           ),
           Wrap(
             children: [
-              IconButton(
-                onPressed: () {
-                  player.seek(Duration.zero);
-                },
-                icon: const Icon(Icons.fast_rewind),
+              Tooltip(
+                message: context.t.audioplayer.mediaButtonRewind,
+                child: IconButton(
+                  onPressed: () {
+                    player.seek(Duration.zero);
+                  },
+                  icon: const Icon(Icons.fast_rewind),
+                ),
               ),
-              IconButton(
-                onPressed: () {
-                  player.seek(position - const Duration(seconds: 10));
-                },
-                icon: const Icon(Icons.replay_10),
+              Tooltip(
+                message: context.t.audioplayer.mediaButtonRewind10Seconds,
+                child: IconButton(
+                  onPressed: () {
+                    player.seek(position - const Duration(seconds: 10));
+                  },
+                  icon: const Icon(Icons.replay_10),
+                ),
               ),
               (playerState == PlayerState.playing)
-                  ? IconButton(
-                      onPressed: () {
-                        player.pause();
-                      },
-                      icon: const Icon(Icons.pause),
+                  ? Tooltip(
+                      message: context.t.audioplayer.mediaButtonPause,
+                      child: IconButton(
+                        onPressed: () {
+                          player.pause();
+                        },
+                        icon: const Icon(Icons.pause),
+                      ),
                     )
-                  : IconButton(
-                      onPressed: () {
-                        player.resume();
-                      },
-                      icon: const Icon(Icons.play_arrow),
+                  : Tooltip(
+                      message: context.t.audioplayer.mediaButtonPlay,
+                      child: IconButton(
+                        onPressed: () {
+                          player.resume();
+                        },
+                        icon: const Icon(Icons.play_arrow),
+                      ),
                     ),
-              IconButton(
-                onPressed: () {
-                  player.seek(position + const Duration(seconds: 10));
-                },
-                icon: const Icon(Icons.forward_10),
+              Tooltip(
+                message: context.t.audioplayer.mediaButtonSkip10Seconds,
+                child: IconButton(
+                  onPressed: () {
+                    player.seek(position + const Duration(seconds: 10));
+                  },
+                  icon: const Icon(Icons.forward_10),
+                ),
               ),
             ],
           ),

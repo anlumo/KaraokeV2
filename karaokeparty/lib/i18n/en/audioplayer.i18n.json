@@ -1,3 +1,8 @@
 {
+    "mediaButtonRewind": "Rewind",
+    "mediaButtonRewind10Seconds": "Rewind 10 seconds",
+    "mediaButtonPlay": "Play",
+    "mediaButtonPause": "Pause",
+    "mediaButtonSkip10Seconds": "Skip 10 seconds",
     "closeButton": "Close"
 }
