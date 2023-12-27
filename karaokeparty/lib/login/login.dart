@@ -24,6 +24,13 @@ class _LoginDialogState extends State<_LoginDialog> {
     _passwordController.addListener(() => setState(() {}));
   }
 
+  @override
+  void dispose() {
+    _passwordController.dispose();
+    _passwordFocus.dispose();
+    super.dispose();
+  }
+
   Size _textSize(String text, TextStyle style) {
     final TextPainter textPainter =
         TextPainter(text: TextSpan(text: text, style: style), maxLines: 1, textDirection: TextDirection.ltr)
@@ -99,5 +106,6 @@ class _LoginDialogState extends State<_LoginDialog> {
 
 Future<String?> showLoginDialog(BuildContext context, ConnectionCubit connection) => showDialog<String?>(
       context: context,
+      useSafeArea: false,
       builder: (context) => _LoginDialog(connection: connection),
     );

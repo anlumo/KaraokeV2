@@ -34,6 +34,13 @@ class _SearchState extends State<Search> {
   }
 
   @override
+  void dispose() {
+    _controller.dispose();
+    _searchBarFocusNode.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.all(8.0),

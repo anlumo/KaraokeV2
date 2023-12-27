@@ -38,6 +38,12 @@ class _PlaylistState extends State<Playlist> {
         onKeyEvent: itemOnKey);
   }
 
+  @override
+  void dispose() {
+    _listFocusNode.dispose();
+    super.dispose();
+  }
+
   WebSocketConnectedState? connectionFromFocusNode(FocusNode focusNode) {
     final context = focusNode.context;
     if (context != null) {

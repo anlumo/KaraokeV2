@@ -32,6 +32,12 @@ class _AddDialogState extends State<_AddDialog> {
     _singerController.addListener(() => setState(() {}));
   }
 
+  @override
+  void dispose() {
+    _singerController.dispose();
+    super.dispose();
+  }
+
   Future<void> _submit(BuildContext context) async {
     final state = widget.api.connectionCubit.state;
     if (state is WebSocketConnectedState) {
@@ -60,7 +66,7 @@ class _AddDialogState extends State<_AddDialog> {
     );
 
     return AlertDialog(
-      insetPadding: const EdgeInsets.all(8),
+      insetPadding: const EdgeInsets.symmetric(vertical: 24, horizontal: 8),
       contentPadding: const EdgeInsets.all(16),
       title: Row(
         children: [
@@ -122,8 +128,10 @@ class _AddDialogState extends State<_AddDialog> {
               }
               return TimerBuilder.periodic(const Duration(seconds: 10), builder: (context) {
                 return TextField(
-                  controller: _singerController,
                   autofocus: true,
+                  controller: _singerController,
+                  autocorrect: false,
+                  autofillHints: const [AutofillHints.name],
                   decoration: InputDecoration(
                     labelText: context.t.search.addDialog.singerTextTitle,
                     helperText: helperText,
