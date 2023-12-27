@@ -3,13 +3,18 @@ use std::{
     path::{Path, PathBuf},
 };
 
+use csv::{StringRecord, Writer};
 use serde::{Deserialize, Serialize};
+use tantivy::time::OffsetDateTime;
+use time::format_description::well_known::Rfc3339;
 use tokio::{
-    fs::File,
+    fs::{File, OpenOptions},
     io::{AsyncReadExt, AsyncWriteExt},
-    sync::{mpsc::UnboundedSender, RwLock},
+    sync::{mpsc::UnboundedSender, Mutex, RwLock},
 };
 use uuid::Uuid;
+
+use crate::songs::SearchIndex;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PlaylistEntry {
@@ -31,13 +36,27 @@ pub struct Playlist {
     valid_songs: HashSet<i64>,
     song_queue: RwLock<InnerPlaylist>,
     persist_path: PathBuf,
+    song_log: Option<Mutex<File>>,
 }
 
 impl Playlist {
     pub async fn load(
         path: impl AsRef<Path>,
         valid_songs: impl IntoIterator<Item = i64>,
+        song_log: Option<impl AsRef<Path>>,
     ) -> anyhow::Result<Self> {
+        let song_log = if let Some(song_log) = song_log {
+            Some(Mutex::new(
+                OpenOptions::new()
+                    .append(true)
+                    .create(true)
+                    .open(song_log)
+                    .await?,
+            ))
+        } else {
+            None
+        };
+
         match File::open(&path).await {
             Ok(mut f) => {
                 let mut data = Vec::new();
@@ -59,12 +78,14 @@ impl Playlist {
                     valid_songs,
                     song_queue: RwLock::new(song_queue),
                     persist_path: path.as_ref().to_owned(),
+                    song_log,
                 })
             }
             Err(err) if err.kind() == std::io::ErrorKind::NotFound => Ok(Self {
                 valid_songs: valid_songs.into_iter().collect(),
                 song_queue: Default::default(),
                 persist_path: path.as_ref().to_owned(),
+                song_log,
             }),
             Err(err) => Err(err.into()),
         }
@@ -94,7 +115,7 @@ impl Playlist {
         Ok(Some(id))
     }
 
-    pub async fn play(&self, id: Uuid) -> anyhow::Result<bool> {
+    pub async fn play(&self, id: Uuid, index: &SearchIndex) -> anyhow::Result<bool> {
         let mut queue = self.song_queue.write().await;
         if let Some(entry) = queue
             .list
@@ -104,6 +125,34 @@ impl Playlist {
         {
             queue.now_playing = queue.list.remove(entry);
             Self::did_change(&mut queue, &self.persist_path).await?;
+            if let (Some(now_playing), Some(song_log)) = (&queue.now_playing, &self.song_log) {
+                let timestamp = OffsetDateTime::now_utc().format(&Rfc3339).unwrap();
+                match index.search_song(&format!("rowid:{}", now_playing.song)) {
+                    Err(err) => {
+                        log::error!("Fetching song for song log failed: {err:?}");
+                    }
+                    Ok(songs) => {
+                        if songs.is_empty() {
+                            log::error!("Can't write song log: song not found!");
+                        } else {
+                            let mut song_log = song_log.lock().await;
+                            let record = StringRecord::from(vec![
+                                &timestamp,
+                                &songs[0].artist,
+                                &songs[0].title,
+                            ]);
+                            let mut writer = Writer::from_writer(Vec::new());
+                            writer.write_record(&record).unwrap();
+
+                            if let Err(err) =
+                                song_log.write_all(&writer.into_inner().unwrap()).await
+                            {
+                                log::error!("Failed writing song log: {err:?}");
+                            }
+                        }
+                    }
+                }
+            }
             Ok(true)
         } else {
             Ok(false)

@@ -40,4 +40,6 @@ args = [
     "MasterCollection",
     "--web-app",
     "karaokeparty/build/web",
+    "--song-log",
+    "song_log.csv",
 ]

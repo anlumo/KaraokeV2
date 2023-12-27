@@ -51,9 +51,12 @@ struct Args {
     /// Path to the directory structure for the covers.
     #[clap(short, long)]
     cover_path: PathBuf,
-    // Path to the web app (directory containing index.html).
+    /// Path to the web app (directory containing index.html).
     #[clap(short, long)]
     web_app: PathBuf,
+    /// Path to the file that should contain the history of what was played.
+    #[clap(short, long)]
+    song_log: Option<PathBuf>,
 }
 
 struct AppState {
@@ -114,7 +117,12 @@ async fn main() -> anyhow::Result<()> {
 
     let index = SearchIndex::new(song_db.iter())?;
     let song_count = song_db.len();
-    let playlist = Playlist::load(args.playlist, song_db.iter().map(|song| song.row_id)).await?;
+    let playlist = Playlist::load(
+        args.playlist,
+        song_db.iter().map(|song| song.row_id),
+        args.song_log.as_deref(),
+    )
+    .await?;
 
     let state = Arc::new(AppState {
         song_count,

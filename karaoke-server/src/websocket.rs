@@ -76,7 +76,7 @@ async fn handle_socket(socket: WebSocket, who: SocketAddr, state: Arc<AppState>)
                                             state.playlist.add(song, singer).await.map(|_| ())
                                         }
                                         Command::Play { id } if authenticated => {
-                                            state.playlist.play(id).await.map(|_| ())
+                                            state.playlist.play(id, &state.index).await.map(|_| ())
                                         }
                                         Command::Remove { id } if authenticated => {
                                             state.playlist.remove(id).await.map(|_| ())

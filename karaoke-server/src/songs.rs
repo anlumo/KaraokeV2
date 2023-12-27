@@ -115,11 +115,11 @@ impl SearchIndex {
         })
     }
 
-    fn search_and_convert<OrderValue, C: Collector<Fruit = Vec<(OrderValue, DocAddress)>>>(
+    fn search_internal<OrderValue, C: Collector<Fruit = Vec<(OrderValue, DocAddress)>>>(
         &self,
         query: &dyn Query,
         collector: C,
-    ) -> tantivy::Result<Vec<serde_json::Value>> {
+    ) -> tantivy::Result<Vec<Song>> {
         let searcher = self.reader.searcher();
         let results = searcher.search(query, &collector)?;
 
@@ -160,13 +160,33 @@ impl SearchIndex {
                         .get_first(self.cover_field)
                         .map(|cover| cover.as_text().unwrap().to_owned()),
                 };
-                Ok(serde_json::to_value(song).unwrap())
+                Ok(song)
             })
             .collect()
     }
 
+    fn search_and_convert<OrderValue, C: Collector<Fruit = Vec<(OrderValue, DocAddress)>>>(
+        &self,
+        query: &dyn Query,
+        collector: C,
+    ) -> tantivy::Result<Vec<serde_json::Value>> {
+        let songs = self.search_internal(query, collector)?;
+
+        Ok(songs
+            .into_iter()
+            .map(|song| serde_json::to_value(song).unwrap())
+            .collect())
+    }
+
     pub fn search(&self, query: &str) -> tantivy::Result<Vec<serde_json::Value>> {
         self.search_and_convert(
+            &self.query_parser.parse_query(query)?,
+            TopDocs::with_limit(50),
+        )
+    }
+
+    pub fn search_song(&self, query: &str) -> tantivy::Result<Vec<Song>> {
+        self.search_internal(
             &self.query_parser.parse_query(query)?,
             TopDocs::with_limit(50),
         )
