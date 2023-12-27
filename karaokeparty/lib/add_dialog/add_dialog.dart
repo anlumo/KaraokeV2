@@ -116,8 +116,8 @@ class _AddDialogState extends State<_AddDialog> {
               String? helperText;
               if (state.songQueue.isNotEmpty) {
                 final prediction = state.songQueue.last.predictedEnd?.difference(DateTime.now().toUtc());
-                if (prediction != null) {
-                  helperText = context.t.search.addDialog.playPrediction(min: prediction.inMinutes);
+                if (!(prediction?.isNegative ?? true)) {
+                  helperText = context.t.search.addDialog.playPrediction(min: prediction!.inMinutes);
                 }
               }
               return TimerBuilder.periodic(const Duration(seconds: 10), builder: (context) {
