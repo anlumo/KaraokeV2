@@ -185,10 +185,10 @@ impl SearchIndex {
         )
     }
 
-    pub fn search_song(&self, query: &str) -> tantivy::Result<Vec<Song>> {
+    pub fn search_song(&self, query: &str, limit: usize) -> tantivy::Result<Vec<Song>> {
         self.search_internal(
             &self.query_parser.parse_query(query)?,
-            TopDocs::with_limit(50),
+            TopDocs::with_limit(limit),
         )
     }
 

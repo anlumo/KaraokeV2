@@ -73,22 +73,22 @@ async fn handle_socket(socket: WebSocket, who: SocketAddr, state: Arc<AppState>)
                                             sender.send(Message::Binary(vec![authenticated as u8])).await.map_err(anyhow::Error::from)
                                         }
                                         Command::Add { song, singer } => {
-                                            state.playlist.add(song, singer).await.map(|_| ())
+                                            state.playlist.add(song, singer, &state.index).await.map(|_| ())
                                         }
                                         Command::Play { id } if authenticated => {
                                             state.playlist.play(id, &state.index).await.map(|_| ())
                                         }
                                         Command::Remove { id } if authenticated => {
-                                            state.playlist.remove(id).await.map(|_| ())
+                                            state.playlist.remove(id, &state.index).await.map(|_| ())
                                         }
                                         Command::Swap { id1, id2 } if authenticated => {
-                                            state.playlist.swap(id1, id2).await.map(|_| ())
+                                            state.playlist.swap(id1, id2, &state.index).await.map(|_| ())
                                         }
                                         Command::MoveAfter { id, after } if authenticated => {
-                                            state.playlist.move_after(id, after).await.map(|_| ())
+                                            state.playlist.move_after(id, after, &state.index).await.map(|_| ())
                                         }
                                         Command::MoveTop { id } if authenticated => {
-                                            state.playlist.move_top(id).await.map(|_| ())
+                                            state.playlist.move_top(id, &state.index).await.map(|_| ())
                                         }
                                         _ => sender.send(Message::Text("Unauthenticated".to_owned())).await.map_err(anyhow::Error::from),
                                     };
