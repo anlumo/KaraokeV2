@@ -170,12 +170,20 @@ class _PlaylistState extends State<Playlist> {
                                               icon: const Icon(Icons.play_arrow)),
                                         ),
                                         Expanded(
+                                          child: GestureDetector(
+                                            onTap: () {
+                                              setState(() {
+                                                _selectedItem = i;
+                                              });
+                                            },
                                             child: PlaylistSongCard(
-                                          songCache: widget.songCache,
-                                          entry: item,
-                                          api: widget.api,
-                                          selected: _selectedItem == i,
-                                        )),
+                                              songCache: widget.songCache,
+                                              entry: item,
+                                              api: widget.api,
+                                              selected: _selectedItem == i,
+                                            ),
+                                          ),
+                                        ),
                                         Tooltip(
                                           message: context.t.playlist.rearrangeTooltip,
                                           child: SizeFadeTransition(
