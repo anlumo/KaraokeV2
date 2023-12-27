@@ -78,11 +78,15 @@ class SongCard extends StatelessWidget {
               TimerBuilder.periodic(const Duration(seconds: 10), builder: (context) {
                 final predictedRelativePlayTime = predictedPlaytime?.difference(DateTime.now().toUtc());
                 return Text(
-                  predictedRelativePlayTime != null && !predictedRelativePlayTime.isNegative
-                      ? context.t.playlist.predictedPlayTimeInMinutes(min: predictedRelativePlayTime.inMinutes)
-                      : '${song.duration ~/ 60}:${(song.duration % 60).round().toString().padLeft(2, '0')}',
+                  !(predictedRelativePlayTime?.isNegative ?? true)
+                      ? context.t.playlist.predictedPlayTimeInMinutes(min: predictedRelativePlayTime!.inMinutes)
+                      : predictedRelativePlayTime?.isNegative ?? false
+                          ? context.t.playlist.predictedPlayTimeInThePast
+                          : '${song.duration ~/ 60}:${(song.duration % 60).round().toString().padLeft(2, '0')}',
                   textAlign: TextAlign.end,
-                  style: theme.textTheme.labelSmall!.copyWith(overflow: TextOverflow.ellipsis),
+                  style: theme.textTheme.labelSmall!.copyWith(
+                      overflow: TextOverflow.ellipsis,
+                      fontWeight: predictedRelativePlayTime?.isNegative ?? false ? FontWeight.bold : null),
                 );
               }).applyConstraint(
                 right: coverImage.left.margin(8),

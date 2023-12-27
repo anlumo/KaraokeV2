@@ -8,5 +8,6 @@
     "playTooltip": "Play",
     "rearrangeTooltip": "Hold to start rearranging",
     "emptyState": "Nobody has requested a song yet. Now is the best time to request one yourself!",
-    "predictedPlayTimeInMinutes": "in $min min"
+    "predictedPlayTimeInMinutes": "in $min min",
+    "predictedPlayTimeInThePast": "now"
 }
