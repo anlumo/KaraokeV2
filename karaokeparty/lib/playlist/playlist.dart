@@ -193,20 +193,17 @@ class _PlaylistState extends State<Playlist> {
                                             ),
                                           ),
                                         ),
-                                        Tooltip(
-                                          message: context.t.playlist.rearrangeTooltip,
-                                          child: SizeFadeTransition(
-                                            animation: itemAnimation,
-                                            child: Handle(
-                                              delay: const Duration(milliseconds: 600),
-                                              child: MouseRegion(
-                                                cursor: inDrag ? SystemMouseCursors.grabbing : SystemMouseCursors.grab,
-                                                child: const SizedBox(
-                                                  height: 80,
-                                                  child: Padding(
-                                                    padding: EdgeInsets.symmetric(horizontal: 8),
-                                                    child: Icon(Icons.menu),
-                                                  ),
+                                        SizeFadeTransition(
+                                          animation: itemAnimation,
+                                          child: Handle(
+                                            delay: const Duration(milliseconds: 600),
+                                            child: MouseRegion(
+                                              cursor: inDrag ? SystemMouseCursors.grabbing : SystemMouseCursors.grab,
+                                              child: const SizedBox(
+                                                height: 80,
+                                                child: Padding(
+                                                  padding: EdgeInsets.symmetric(horizontal: 8),
+                                                  child: Icon(Icons.menu),
                                                 ),
                                               ),
                                             ),
