@@ -20,7 +20,7 @@ final class ServerApi {
   final playlist = PlaylistCubit();
 
   Future<void> connect() async {
-    serverHost = await baseUri();
+    serverHost = await host();
 
     return connectionCubit.connect(playlist);
   }

@@ -8,6 +8,6 @@ final class Host {
   Host({required this.covers, required this.api, required this.wsUrl});
 }
 
-FutureOr<Host> baseUri() {
+FutureOr<Host> host() {
   return Host(covers: 'http://localhost:8080/cover', api: 'http://localhost:8080/api', wsUrl: 'ws://localhost:8080/ws');
 }
