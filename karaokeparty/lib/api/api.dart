@@ -8,6 +8,7 @@ import 'package:http/http.dart' as http;
 
 import 'package:karaokeparty/api/host_detector.io.dart'
     if (dart.library.html) 'package:karaokeparty/api/host_detector.web.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 export 'package:karaokeparty/api/host_detector.io.dart'
     if (dart.library.html) 'package:karaokeparty/api/host_detector.web.dart' show Host;
@@ -16,7 +17,8 @@ late Host serverHost;
 final client = http.Client();
 
 final class ServerApi {
-  final connectionCubit = ConnectionCubit();
+  ServerApi(SharedPreferences sharedPreferences) : connectionCubit = ConnectionCubit(sharedPreferences);
+  final ConnectionCubit connectionCubit;
   final playlist = PlaylistCubit();
 
   Future<void> connect() async {

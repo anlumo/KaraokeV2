@@ -5,21 +5,21 @@ import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:karaokeparty/api/api.dart';
 import 'package:karaokeparty/api/cubit/playlist_cubit.dart';
 import 'package:karaokeparty/i18n/strings.g.dart';
 import 'package:karaokeparty/main.dart';
 import 'package:karaokeparty/model/playlist_entry.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 
 part 'connection_state.dart';
 
 class ConnectionCubit extends Cubit<WebSocketConnectionState> {
-  ConnectionCubit() : super(const InitialWebSocketConnectionState());
+  ConnectionCubit(this.sharedPreferences) : super(const InitialWebSocketConnectionState());
 
-  final storage = const FlutterSecureStorage();
+  SharedPreferences sharedPreferences;
   Completer<bool>? _loginListener;
 
   Future<void> connect(PlaylistCubit playlist) async {
@@ -47,7 +47,7 @@ class ConnectionCubit extends Cubit<WebSocketConnectionState> {
       emit(WebSocketConnectionFailedState(Exception('Couldn\'t parse song count: ${response.body}')));
       return;
     }
-    final password = await storage.read(key: "password");
+    final password = sharedPreferences.getString("password");
     if (password != null) {
       channel.sink.add(jsonEncode({
         'cmd': 'authenticate',
@@ -102,7 +102,7 @@ class ConnectionCubit extends Cubit<WebSocketConnectionState> {
   }
 
   Future<bool> login(String password) async {
-    await storage.write(key: "password", value: password);
+    await sharedPreferences.setString("password", password);
     _loginListener = Completer<bool>();
 
     switch (state) {
@@ -121,7 +121,7 @@ class ConnectionCubit extends Cubit<WebSocketConnectionState> {
   }
 
   Future<bool> logout() async {
-    await storage.delete(key: "password");
+    await sharedPreferences.remove("password");
     _loginListener = Completer<bool>();
 
     switch (state) {

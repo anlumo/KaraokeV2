@@ -12,6 +12,7 @@ import 'package:karaokeparty/now_playing/now_playing.dart';
 import 'package:karaokeparty/playlist/playlist.dart';
 import 'package:karaokeparty/search/search.dart';
 import 'package:logger/logger.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 final log = Logger(
   printer: PrettyPrinter(
@@ -28,11 +29,23 @@ const double wideLayoutSidebarWidth = 450;
 
 void main() {
   log.d('Starting application');
-  runApp(TranslationProvider(child: const MyApp()));
+  runApp(TranslationProvider(
+      child: FutureBuilder(
+          future: SharedPreferences.getInstance(),
+          builder: (context, snapshot) {
+            if (snapshot.hasData) {
+              return MyApp(
+                sharedPreferences: snapshot.data!,
+              );
+            }
+            return const SizedBox();
+          })));
 }
 
 class MyApp extends StatefulWidget {
-  const MyApp({super.key});
+  const MyApp({required this.sharedPreferences, super.key});
+
+  final SharedPreferences sharedPreferences;
 
   @override
   State<MyApp> createState() => _MyAppState();
@@ -40,12 +53,15 @@ class MyApp extends StatefulWidget {
 
 class _MyAppState extends State<MyApp> {
   bool isDark = false;
-  final server = ServerApi();
+  late final ServerApi server;
   final songCache = SongCache();
 
   @override
   void initState() {
     super.initState();
+    isDark = widget.sharedPreferences.getBool('darkMode') ??
+        (WidgetsBinding.instance.platformDispatcher.platformBrightness == Brightness.dark);
+    server = ServerApi(widget.sharedPreferences);
     server.connect();
   }
 
@@ -141,24 +157,24 @@ class _MyAppState extends State<MyApp> {
                           resizeToAvoidBottomInset: false,
                           appBar: AppBar(
                             title: Text(context.t.core.title),
-                            bottom: TabBar(tabs: [
-                              Tooltip(
-                                message: context.t.core.searchTabTooltip,
-                                child: const Tab(icon: Icon(Icons.search)),
-                              ),
-                              Tooltip(
-                                message: context.t.core.masterListTooltip,
-                                child: const Tab(icon: Icon(Icons.library_music)),
-                              ),
-                              compactLayout
-                                  ? Tooltip(
-                                      message: context.t.core.playlistTooltip,
-                                      child: const Tab(icon: Icon(Icons.mic_external_on)),
-                                    )
-                                  : const SizedBox(
-                                      width: wideLayoutSidebarWidth,
-                                    ),
-                            ]),
+                            bottom: TabBar(
+                              tabs: [
+                                Tooltip(
+                                  message: context.t.core.searchTabTooltip,
+                                  child: const Tab(icon: Icon(Icons.search)),
+                                ),
+                                Tooltip(
+                                  message: context.t.core.masterListTooltip,
+                                  child: const Tab(icon: Icon(Icons.library_music)),
+                                ),
+                                if (compactLayout)
+                                  Tooltip(
+                                    message: context.t.core.playlistTooltip,
+                                    child: const Tab(icon: Icon(Icons.mic_external_on)),
+                                  ),
+                              ],
+                              padding: compactLayout ? null : const EdgeInsets.only(right: wideLayoutSidebarWidth),
+                            ),
                             actions: [
                               Padding(
                                 padding: const EdgeInsets.symmetric(horizontal: 8.0),
@@ -183,6 +199,7 @@ class _MyAppState extends State<MyApp> {
                                   message: context.t.core.darkModeButtonTooltip,
                                   child: IconButton(
                                     onPressed: () {
+                                      server.connectionCubit.sharedPreferences.setBool('darkMode', !isDark);
                                       setState(() {
                                         isDark = !isDark;
                                       });
