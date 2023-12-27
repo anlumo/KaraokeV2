@@ -23,7 +23,7 @@ class ConnectionCubit extends Cubit<WebSocketConnectionState> {
   Completer<bool>? _loginListener;
 
   Future<void> connect(PlaylistCubit playlist) async {
-    final wsUrl = Uri.parse('ws://$serverHost/ws');
+    final wsUrl = Uri.parse(serverHost.wsUrl);
     log.d('Connecting to $wsUrl...');
 
     emit(const WebSocketConnectingState());
@@ -37,7 +37,7 @@ class ConnectionCubit extends Cubit<WebSocketConnectionState> {
     }
 
     log.d('Connected to web socket!');
-    final response = await client.get(Uri.parse('$serverApi/song_count'));
+    final response = await client.get(Uri.parse('${serverHost.api}/song_count'));
     if (response.statusCode != 200) {
       emit(WebSocketConnectionFailedState(
           Exception('Couldn\'t fetch song count, server returned status ${response.statusCode}.')));

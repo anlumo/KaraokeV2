@@ -12,7 +12,7 @@ final class SongCache {
     if (cached != null) {
       return cached;
     }
-    return client.get(Uri.parse('$serverApi/song?id=$id')).then((response) {
+    return client.get(Uri.parse('${serverHost.api}/song?id=$id')).then((response) {
       if (response.statusCode != 200) {
         _cache[id] = null;
         return null;

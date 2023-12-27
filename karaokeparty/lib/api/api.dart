@@ -4,18 +4,24 @@ import 'dart:convert';
 import 'package:karaokeparty/api/cubit/connection_cubit.dart';
 import 'package:karaokeparty/api/cubit/playlist_cubit.dart';
 import 'package:karaokeparty/model/song.dart';
-import 'package:uuid/uuid.dart';
 import 'package:http/http.dart' as http;
 
-const serverHost = 'localhost:8080';
-const serverApi = 'http://$serverHost/api';
+import 'package:karaokeparty/api/host_detector.io.dart'
+    if (dart.library.html) 'package:karaokeparty/api/host_detector.web.dart';
+
+export 'package:karaokeparty/api/host_detector.io.dart'
+    if (dart.library.html) 'package:karaokeparty/api/host_detector.web.dart' show Host;
+
+late Host serverHost;
 final client = http.Client();
 
 final class ServerApi {
   final connectionCubit = ConnectionCubit();
   final playlist = PlaylistCubit();
 
-  Future<void> connect() {
+  Future<void> connect() async {
+    serverHost = await baseUri();
+
     return connectionCubit.connect(playlist);
   }
 
@@ -25,7 +31,7 @@ final class ServerApi {
       };
 
   Future<List<Song>> search(String text) async {
-    final response = await client.post(Uri.parse('$serverApi/search'), body: utf8.encode(text));
+    final response = await client.post(Uri.parse('${serverHost.api}/search'), body: utf8.encode(text));
     if (response.statusCode != 200) {
       throw Exception(response);
     }
@@ -36,7 +42,7 @@ final class ServerApi {
   }
 
   Future<List<Song>?> fetchSongs(int offset, int perPage) async {
-    final response = await client.get(Uri.parse('$serverApi/all_songs?offset=$offset&per_page=$perPage'));
+    final response = await client.get(Uri.parse('${serverHost.api}/all_songs?offset=$offset&per_page=$perPage'));
     if (response.statusCode != 200) {
       return null;
     }
@@ -45,7 +51,7 @@ final class ServerApi {
   }
 
   Future<Song?> fetchSongByOffset(int offset) async {
-    final response = await client.get(Uri.parse('$serverApi/all_songs?offset=$offset&per_page=1'));
+    final response = await client.get(Uri.parse('${serverHost.api}/all_songs?offset=$offset&per_page=1'));
     if (response.statusCode != 200) {
       return null;
     }
@@ -54,7 +60,7 @@ final class ServerApi {
   }
 
   Future<List<Song>?> fetchRandomSongs(int count) async {
-    final response = await client.get(Uri.parse('$serverApi/random_songs?count=$count'));
+    final response = await client.get(Uri.parse('${serverHost.api}/random_songs?count=$count'));
     if (response.statusCode != 200) {
       return null;
     }
