@@ -119,7 +119,7 @@ class SongCard extends StatelessWidget {
   }
 
   Image coverImageWidget() => Image.network(
-        'http://${serverHost.api}/cover/${song.coverPath}',
+        '${serverHost.covers}/${song.coverPath}',
         loadingBuilder: (BuildContext context, Widget child, ImageChunkEvent? loadingProgress) {
           if (loadingProgress == null) {
             return child;
