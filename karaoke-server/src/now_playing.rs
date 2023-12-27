@@ -17,6 +17,7 @@ use uuid::Uuid;
 use crate::songs::SearchIndex;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct PlaylistEntry {
     id: Uuid,
     song: i64,
