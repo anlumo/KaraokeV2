@@ -22,42 +22,44 @@ class _AudioPlayerState extends State<_AudioPlayer> {
   var position = Duration.zero;
   var playerState = PlayerState.stopped;
 
+  var disposed = false;
+
   @override
   void initState() {
     super.initState();
-    player.setSourceUrl('${serverHost.media}/${widget.song.audioPath}');
-    player.eventStream.listen((event) {
-      switch (event.eventType) {
-        case AudioEventType.position:
-          if (event.position != null) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      player.setSourceUrl('${serverHost.media}/${widget.song.audioPath}');
+      player.onDurationChanged.listen((newDuration) {
+        if (!disposed) {
+          setState(() {
+            duration = newDuration;
+          });
+        }
+      });
+      player.onPositionChanged.listen((newPosition) {
+        if (!disposed) {
+          setState(() {
+            position = newPosition;
+          });
+        }
+      });
+      player.onPlayerComplete.listen((_) => Navigator.of(context).pop());
+      player.onPlayerStateChanged.listen(
+        (event) {
+          if (!disposed) {
             setState(() {
-              position = event.position!;
+              playerState = event;
             });
           }
-        case AudioEventType.duration:
-          if (event.duration != null) {
-            setState(() {
-              duration = event.duration!;
-            });
-          }
-        case AudioEventType.complete:
-          Navigator.of(context).pop();
-        case AudioEventType.log:
-        case AudioEventType.seekComplete:
-        case AudioEventType.prepared:
-          break;
-      }
+        },
+      );
+      player.resume();
     });
-    player.onPlayerStateChanged.listen(
-      (event) => setState(() {
-        playerState = event;
-      }),
-    );
-    player.resume();
   }
 
   @override
   void dispose() {
+    disposed = true;
     player.dispose();
     super.dispose();
   }
