@@ -59,7 +59,7 @@ struct Args {
     song_log: Option<PathBuf>,
 }
 
-struct AppState {
+pub struct AppState {
     song_count: usize,
     index: SearchIndex,
     playlist: Playlist,
@@ -197,7 +197,7 @@ async fn search(
 }
 
 #[derive(Debug, Deserialize)]
-struct Pagination {
+pub struct Pagination {
     offset: u32,
     per_page: u32,
 }

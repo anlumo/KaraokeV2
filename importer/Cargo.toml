@@ -6,6 +6,6 @@ edition = "2021"
 [dependencies]
 anyhow = "1.0.76"
 clap = { version = "4.4.11", features = ["derive"] }
-rusqlite = { version = "0.30.0" }
+rusqlite = { version = "0.30.0", features = ["bundled"] }
 ultrastar-txt = { git = "https://github.com/anlumo/ultrastar-txt.git" }
 ffmpeg-next = "6.1.0"
