@@ -74,6 +74,7 @@ class _MyAppState extends State<MyApp> {
             ColorScheme.fromSeed(seedColor: Colors.deepOrange, brightness: isDark ? Brightness.dark : Brightness.light),
         useMaterial3: true,
         brightness: isDark ? Brightness.dark : Brightness.light,
+        fontFamily: 'Roboto',
       ),
       debugShowCheckedModeBanner: false,
       home: BlocBuilder(
