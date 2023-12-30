@@ -41,6 +41,7 @@ class ConnectionCubit extends Cubit<WebSocketConnectionState> {
     if (response.statusCode != 200) {
       emit(WebSocketConnectionFailedState(
           Exception('Couldn\'t fetch song count, server returned status ${response.statusCode}.')));
+      return;
     }
     final songCount = int.tryParse(response.body);
     if (songCount == null) {
@@ -55,7 +56,15 @@ class ConnectionCubit extends Cubit<WebSocketConnectionState> {
       }));
     }
 
-    emit(WebSocketConnectedState(sink: channel.sink, songCount: songCount, isAdmin: false));
+    final languagesResponse = await client.get(Uri.parse('${serverHost.api}/languages'));
+    if (response.statusCode != 200) {
+      emit(WebSocketConnectionFailedState(
+          Exception('Couldn\'t fetch languages list, server returned status ${response.statusCode}.')));
+      return;
+    }
+
+    final languages = (jsonDecode(languagesResponse.body) as List).whereType<String>().toList(growable: false);
+    emit(WebSocketConnectedState(sink: channel.sink, songCount: songCount, isAdmin: false, languages: languages));
 
     channel.stream.listen((message) {
       if (message is String) {
@@ -86,7 +95,7 @@ class ConnectionCubit extends Cubit<WebSocketConnectionState> {
           _loginListener!.complete(success);
           _loginListener = null;
         }
-        emit(WebSocketConnectedState(sink: channel.sink, songCount: songCount, isAdmin: success));
+        emit(WebSocketConnectedState(sink: channel.sink, songCount: songCount, isAdmin: success, languages: languages));
       }
     }, onError: (error) {
       log.e('Websocket connection failed: $error');

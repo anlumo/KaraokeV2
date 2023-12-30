@@ -8,6 +8,20 @@
         "submitButton": "Submit",
         "cancelButton": "Cancel"
     },
+    "searchFilterAllLanguages": "All",
+    "searchFilterLanguagesTooltip": "Filter by language",
+    "searchFilterAllYears": "All",
+    "searchFilterDecades(map)": {
+        "1950 TO 1959": "1950s",
+        "1960 TO 1969": "1960s",
+        "1970 TO 1979": "1970s",
+        "1980 TO 1989": "1980s",
+        "1990 TO 1999": "1990s",
+        "2000 TO 2009": "2000s",
+        "2010 TO 2019": "2010s",
+        "2020 TO 2029": "2020s"
+    },
+    "searchFilterDecadesTooltip": "Filter by decade",
     "emptyState": {
         "explanation": "Tap on the search field above and enter freeform text to search for artists, titles or lyrics. Use quotes to search for phrases, and you can also use - before a word to exclude it. To search for a song from a specific year, add for example \"year:2012\".\nTap the die on the right to get a random pick!",
         "randomPickListTitle": "Some suggestions:",

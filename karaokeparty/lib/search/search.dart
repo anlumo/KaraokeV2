@@ -5,9 +5,11 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_constraintlayout/flutter_constraintlayout.dart';
 import 'package:karaokeparty/add_dialog/add_dialog.dart';
 import 'package:karaokeparty/api/api.dart';
+import 'package:karaokeparty/api/cubit/connection_cubit.dart';
 import 'package:karaokeparty/api/cubit/playlist_cubit.dart';
 import 'package:karaokeparty/i18n/strings.g.dart';
 import 'package:karaokeparty/model/song.dart';
+import 'package:karaokeparty/search/cubit/search_filter_cubit.dart';
 import 'package:karaokeparty/search/empty_state.dart';
 import 'package:karaokeparty/widgets/song_card.dart';
 
@@ -40,6 +42,22 @@ class _SearchState extends State<Search> {
     _controller.dispose();
     _searchBarFocusNode.dispose();
     super.dispose();
+  }
+
+  void _updateSearch(BuildContext context) {
+    if (_controller.text.isEmpty) {
+      return;
+    }
+    final searchFilter = context.read<SearchFilterCubit>();
+    final search = [
+      _controller.text,
+      if (searchFilter.language != null) 'language:"${searchFilter.language!}"',
+      if (searchFilter.decade != null) 'year:[${searchFilter.decade!}]'
+    ].join(' AND ');
+
+    setState(() {
+      _searchResults = widget.api.search(search);
+    });
   }
 
   @override
@@ -79,7 +97,7 @@ class _SearchState extends State<Search> {
                     },
                   )
                 : Padding(
-                    padding: const EdgeInsets.only(top: 66),
+                    padding: const EdgeInsets.only(top: 72),
                     child: EmptyState(
                       api: widget.api,
                       explanation: context.t.search.emptyState.explanation,
@@ -90,52 +108,139 @@ class _SearchState extends State<Search> {
             top: 0,
             left: 0,
             right: 0,
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(28),
+            child: ClipRect(
               child: BackdropFilter(
                 filter: ImageFilter.blur(sigmaX: 6, sigmaY: 6),
-                child: SearchBar(
-                  focusNode: _searchBarFocusNode,
-                  controller: _controller,
-                  padding: const MaterialStatePropertyAll<EdgeInsets>(EdgeInsets.symmetric(horizontal: 16.0)),
-                  backgroundColor: MaterialStatePropertyAll(theme.colorScheme.surface.withOpacity(0.5)),
-                  onTap: () {},
-                  onChanged: (_) {},
-                  onSubmitted: (text) {
-                    setState(() {
-                      _searchResults = widget.api.search(text);
-                    });
-                  },
-                  leading: const Icon(Icons.search),
-                  trailing: [
-                    Tooltip(
-                      message: _controller.text.isNotEmpty
-                          ? context.t.search.clearTextButton
-                          : context.t.search.randomPickButton,
-                      child: _controller.text.isNotEmpty
-                          ? IconButton(
-                              onPressed: () {
-                                _controller.clear();
-                                setState(() {
-                                  _searchResults = null;
-                                });
+                child: ColoredBox(
+                  color: theme.colorScheme.background.withOpacity(0.5),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 8.0),
+                    child: BlocBuilder<SearchFilterCubit, SearchFilterState>(
+                      builder: (context, searchFilter) => Row(
+                        children: [
+                          Expanded(
+                            child: SearchBar(
+                              focusNode: _searchBarFocusNode,
+                              controller: _controller,
+                              padding:
+                                  const MaterialStatePropertyAll<EdgeInsets>(EdgeInsets.symmetric(horizontal: 16.0)),
+                              backgroundColor: MaterialStatePropertyAll(theme.colorScheme.surface.withOpacity(0.5)),
+                              onTap: () {},
+                              onChanged: (_) {},
+                              onSubmitted: (_) {
+                                _updateSearch(context);
                               },
-                              icon: const Icon(Icons.clear))
-                          : IconButton(
-                              onPressed: () async {
-                                final songs = await widget.api.fetchRandomSongs(1);
-                                if (songs != null && songs.length == 1 && context.mounted) {
-                                  showAddSongDialog(
-                                    context,
-                                    song: songs.first,
-                                    api: widget.api,
-                                    playlistCubit: context.read<PlaylistCubit>(),
-                                  );
-                                }
-                              },
-                              icon: const Icon(Icons.casino)),
+                              leading: const Icon(Icons.search),
+                              trailing: [
+                                Tooltip(
+                                  message: _controller.text.isNotEmpty
+                                      ? context.t.search.clearTextButton
+                                      : context.t.search.randomPickButton,
+                                  child: _controller.text.isNotEmpty
+                                      ? IconButton(
+                                          onPressed: () {
+                                            _controller.clear();
+                                            setState(() {
+                                              _searchResults = null;
+                                            });
+                                          },
+                                          icon: const Icon(Icons.clear))
+                                      : IconButton(
+                                          onPressed: () async {
+                                            final songs = await widget.api.fetchRandomSongs(1);
+                                            if (songs != null && songs.length == 1 && context.mounted) {
+                                              showAddSongDialog(
+                                                context,
+                                                song: songs.first,
+                                                api: widget.api,
+                                                playlistCubit: context.read<PlaylistCubit>(),
+                                              );
+                                            }
+                                          },
+                                          icon: const Icon(Icons.casino)),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(
+                            width: 8,
+                          ),
+                          Tooltip(
+                            message: context.t.search.searchFilterLanguagesTooltip,
+                            child: MenuAnchor(
+                                menuChildren: widget.api.connectionCubit.state is WebSocketConnectedState
+                                    ? [
+                                        RadioMenuButton(
+                                            value: null,
+                                            groupValue: searchFilter.language,
+                                            onChanged: (_) {
+                                              context.read<SearchFilterCubit>().language = null;
+                                              _updateSearch(context);
+                                            },
+                                            child: Text(context.t.search.searchFilterAllLanguages)),
+                                        const Divider(),
+                                        ...(widget.api.connectionCubit.state as WebSocketConnectedState)
+                                            .languages
+                                            .map((language) => RadioMenuButton(
+                                                value: language,
+                                                groupValue: searchFilter.language,
+                                                onChanged: (_) {
+                                                  context.read<SearchFilterCubit>().language = language;
+                                                  _updateSearch(context);
+                                                },
+                                                child: Text(language)))
+                                      ]
+                                    : const [],
+                                builder: (context, controller, child) => IconButton(
+                                    onPressed: () {
+                                      if (controller.isOpen) {
+                                        controller.close();
+                                      } else {
+                                        controller.open();
+                                      }
+                                    },
+                                    icon: const Icon(Icons.language))),
+                          ),
+                          Tooltip(
+                            message: context.t.search.searchFilterDecadesTooltip,
+                            child: MenuAnchor(
+                              menuChildren: [
+                                RadioMenuButton(
+                                    value: null,
+                                    groupValue: searchFilter.decade,
+                                    onChanged: (_) {
+                                      context.read<SearchFilterCubit>().decade = null;
+                                      _updateSearch(context);
+                                    },
+                                    child: Text(context.t.search.searchFilterAllYears)),
+                                const Divider(),
+                                ...context.t.search.searchFilterDecades.entries.map(
+                                  (entry) => RadioMenuButton(
+                                    value: entry.key,
+                                    groupValue: searchFilter.decade,
+                                    onChanged: (_) {
+                                      context.read<SearchFilterCubit>().decade = entry.key;
+                                      _updateSearch(context);
+                                    },
+                                    child: Text(entry.value),
+                                  ),
+                                ),
+                              ],
+                              builder: (context, controller, child) => IconButton(
+                                  onPressed: () {
+                                    if (controller.isOpen) {
+                                      controller.close();
+                                    } else {
+                                      controller.open();
+                                    }
+                                  },
+                                  icon: const Icon(Icons.calendar_month)),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                  ],
+                  ),
                 ),
               ),
             ),

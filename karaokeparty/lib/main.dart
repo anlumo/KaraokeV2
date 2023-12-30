@@ -10,6 +10,7 @@ import 'package:karaokeparty/intents.dart';
 import 'package:karaokeparty/login/login.dart';
 import 'package:karaokeparty/now_playing/now_playing.dart';
 import 'package:karaokeparty/playlist/playlist.dart';
+import 'package:karaokeparty/search/cubit/search_filter_cubit.dart';
 import 'package:karaokeparty/search/search.dart';
 import 'package:logger/logger.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -127,6 +128,7 @@ class _MyAppState extends State<MyApp> {
                 providers: [
                   BlocProvider.value(value: server.playlist),
                   BlocProvider.value(value: server.connectionCubit),
+                  BlocProvider(create: (_) => SearchFilterCubit()),
                 ],
                 child: DefaultTabController(
                   length: compactLayout ? 3 : 2,

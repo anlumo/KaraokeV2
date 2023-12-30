@@ -13,11 +13,13 @@ final class WebSocketConnectingState extends WebSocketConnectionState {
 }
 
 final class WebSocketConnectedState extends WebSocketConnectionState {
-  const WebSocketConnectedState({required this.sink, required this.songCount, required this.isAdmin});
+  const WebSocketConnectedState(
+      {required this.sink, required this.songCount, required this.isAdmin, required this.languages});
 
   final WebSocketSink sink;
   final int songCount;
   final bool isAdmin;
+  final List<String> languages;
 
   void submitSong({required String singer, required int songId}) {
     sink.add(jsonEncode({
