@@ -3,6 +3,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_constraintlayout/flutter_constraintlayout.dart';
+import 'package:http/http.dart';
 import 'package:karaokeparty/add_dialog/add_dialog.dart';
 import 'package:karaokeparty/api/api.dart';
 import 'package:karaokeparty/api/cubit/connection_cubit.dart';
@@ -76,10 +77,25 @@ class _SearchState extends State<Search> {
                       if (snapshot.hasError) {
                         final theme = Theme.of(context);
 
+                        final String message;
+                        if (snapshot.error is ServerError &&
+                            (snapshot.error as ServerError).response.statusCode == 400) {
+                          message =
+                              '${context.t.search.searchQueryParserError}\n\n${(snapshot.error as ServerError).response.body}';
+                        } else {
+                          message = snapshot.error.toString();
+                        }
+
                         return Center(
-                          child: Text(
-                            snapshot.error.toString(),
-                            style: theme.textTheme.labelLarge!.copyWith(color: theme.colorScheme.error),
+                          child: Card(
+                            child: Padding(
+                              padding: const EdgeInsets.all(16),
+                              child: Text(
+                                message,
+                                textAlign: TextAlign.center,
+                                style: theme.textTheme.labelLarge!.copyWith(color: theme.colorScheme.error),
+                              ),
+                            ),
                           ),
                         );
                       }

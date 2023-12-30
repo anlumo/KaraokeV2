@@ -202,7 +202,7 @@ async fn search(
     log::debug!("Searching for {search_str:?}");
     let result = state.index.search(&search_str).map_err(|err| {
         log::error!("Search for {search_str:?} failed: {err:?}");
-        (StatusCode::BAD_REQUEST, Body::from(format!("{err:?}")))
+        (StatusCode::BAD_REQUEST, Body::from(format!("{err}")))
     })?;
     Ok(Json(result))
 }

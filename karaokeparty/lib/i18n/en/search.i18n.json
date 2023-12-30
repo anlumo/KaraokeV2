@@ -26,5 +26,6 @@
         "explanation": "Tap on the search field above and enter freeform text to search for artists, titles or lyrics. Use quotes to search for phrases, and you can also use - before a word to exclude it. To search for a song from a specific year, add for example \"year:2012\".\nTap the die on the right to get a random pick!",
         "randomPickListTitle": "Some suggestions:",
         "rerollRandom": "Show new suggestions"
-    }
+    },
+    "searchQueryParserError": "Unable to understand your search query."
 }

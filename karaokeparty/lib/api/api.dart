@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:http/http.dart';
 import 'package:karaokeparty/api/cubit/connection_cubit.dart';
 import 'package:karaokeparty/api/cubit/playlist_cubit.dart';
 import 'package:karaokeparty/model/song.dart';
@@ -15,6 +16,12 @@ export 'package:karaokeparty/api/host_detector.io.dart'
 
 late Host serverHost;
 final client = http.Client();
+
+final class ServerError implements Exception {
+  final Response response;
+
+  ServerError(this.response);
+}
 
 final class ServerApi {
   ServerApi(SharedPreferences sharedPreferences) : connectionCubit = ConnectionCubit(sharedPreferences);
@@ -35,7 +42,7 @@ final class ServerApi {
   Future<List<Song>> search(String text) async {
     final response = await client.post(Uri.parse('${serverHost.api}/search'), body: utf8.encode(text));
     if (response.statusCode != 200) {
-      throw Exception(response);
+      throw ServerError(response);
     }
     final json = utf8.decode(response.bodyBytes);
     return (jsonDecode(json) as List<dynamic>)
@@ -46,7 +53,7 @@ final class ServerApi {
   Future<List<Song>?> fetchSongs(int offset, int perPage) async {
     final response = await client.get(Uri.parse('${serverHost.api}/all_songs?offset=$offset&per_page=$perPage'));
     if (response.statusCode != 200) {
-      return null;
+      throw ServerError(response);
     }
     final json = utf8.decode(response.bodyBytes);
     return (jsonDecode(json) as List<dynamic>).map((song) => Song.fromJson(song)).toList(growable: false);
@@ -55,7 +62,7 @@ final class ServerApi {
   Future<Song?> fetchSongByOffset(int offset) async {
     final response = await client.get(Uri.parse('${serverHost.api}/all_songs?offset=$offset&per_page=1'));
     if (response.statusCode != 200) {
-      return null;
+      throw ServerError(response);
     }
     final json = utf8.decode(response.bodyBytes);
     return (jsonDecode(json) as List<dynamic>).map((song) => Song.fromJson(song)).firstOrNull;
@@ -64,7 +71,7 @@ final class ServerApi {
   Future<List<Song>?> fetchRandomSongs(int count) async {
     final response = await client.get(Uri.parse('${serverHost.api}/random_songs?count=$count'));
     if (response.statusCode != 200) {
-      return null;
+      throw ServerError(response);
     }
     final json = utf8.decode(response.bodyBytes);
     return (jsonDecode(json) as List<dynamic>).map((song) => Song.fromJson(song)).toList(growable: false);
