@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_constraintlayout/flutter_constraintlayout.dart';
@@ -42,57 +44,13 @@ class _SearchState extends State<Search> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Padding(
       padding: const EdgeInsets.all(8.0),
       child: Stack(
         children: [
           Positioned.fill(
-            bottom: null,
-            child: SearchBar(
-              focusNode: _searchBarFocusNode,
-              controller: _controller,
-              padding: const MaterialStatePropertyAll<EdgeInsets>(EdgeInsets.symmetric(horizontal: 16.0)),
-              onTap: () {},
-              onChanged: (_) {},
-              onSubmitted: (text) {
-                setState(() {
-                  _searchResults = widget.api.search(text);
-                });
-              },
-              leading: const Icon(Icons.search),
-              trailing: [
-                Tooltip(
-                  message: _controller.text.isNotEmpty
-                      ? context.t.search.clearTextButton
-                      : context.t.search.randomPickButton,
-                  child: _controller.text.isNotEmpty
-                      ? IconButton(
-                          onPressed: () {
-                            _controller.clear();
-                            setState(() {
-                              _searchResults = null;
-                            });
-                          },
-                          icon: const Icon(Icons.clear))
-                      : IconButton(
-                          onPressed: () async {
-                            final songs = await widget.api.fetchRandomSongs(1);
-                            if (songs != null && songs.length == 1 && context.mounted) {
-                              showAddSongDialog(
-                                context,
-                                song: songs.first,
-                                api: widget.api,
-                                playlistCubit: context.read<PlaylistCubit>(),
-                              );
-                            }
-                          },
-                          icon: const Icon(Icons.casino)),
-                ),
-              ],
-            ),
-          ),
-          Positioned.fill(
-            top: 66,
             child: (_searchResults != null)
                 ? FutureBuilder(
                     future: _searchResults,
@@ -112,6 +70,7 @@ class _SearchState extends State<Search> {
                       }
                       return ListView.builder(
                         primary: true,
+                        padding: const EdgeInsets.only(top: 66),
                         itemCount: snapshot.data!.length,
                         itemBuilder: (context, index) {
                           return SongCard(song: snapshot.data![index], api: widget.api);
@@ -119,10 +78,67 @@ class _SearchState extends State<Search> {
                       );
                     },
                   )
-                : EmptyState(
-                    api: widget.api,
-                    explanation: context.t.search.emptyState.explanation,
+                : Padding(
+                    padding: const EdgeInsets.only(top: 66),
+                    child: EmptyState(
+                      api: widget.api,
+                      explanation: context.t.search.emptyState.explanation,
+                    ),
                   ),
+          ),
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(28),
+              child: BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 6, sigmaY: 6),
+                child: SearchBar(
+                  focusNode: _searchBarFocusNode,
+                  controller: _controller,
+                  padding: const MaterialStatePropertyAll<EdgeInsets>(EdgeInsets.symmetric(horizontal: 16.0)),
+                  backgroundColor: MaterialStatePropertyAll(theme.colorScheme.surface.withOpacity(0.5)),
+                  onTap: () {},
+                  onChanged: (_) {},
+                  onSubmitted: (text) {
+                    setState(() {
+                      _searchResults = widget.api.search(text);
+                    });
+                  },
+                  leading: const Icon(Icons.search),
+                  trailing: [
+                    Tooltip(
+                      message: _controller.text.isNotEmpty
+                          ? context.t.search.clearTextButton
+                          : context.t.search.randomPickButton,
+                      child: _controller.text.isNotEmpty
+                          ? IconButton(
+                              onPressed: () {
+                                _controller.clear();
+                                setState(() {
+                                  _searchResults = null;
+                                });
+                              },
+                              icon: const Icon(Icons.clear))
+                          : IconButton(
+                              onPressed: () async {
+                                final songs = await widget.api.fetchRandomSongs(1);
+                                if (songs != null && songs.length == 1 && context.mounted) {
+                                  showAddSongDialog(
+                                    context,
+                                    song: songs.first,
+                                    api: widget.api,
+                                    playlistCubit: context.read<PlaylistCubit>(),
+                                  );
+                                }
+                              },
+                              icon: const Icon(Icons.casino)),
+                    ),
+                  ],
+                ),
+              ),
+            ),
           ),
         ],
       ),
