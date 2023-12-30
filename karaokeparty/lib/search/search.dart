@@ -143,6 +143,7 @@ class _SearchState extends State<Search> {
                               padding:
                                   const MaterialStatePropertyAll<EdgeInsets>(EdgeInsets.symmetric(horizontal: 16.0)),
                               backgroundColor: MaterialStatePropertyAll(theme.colorScheme.surface.withOpacity(0.5)),
+                              hintText: context.t.search.searchHint,
                               onTap: () {},
                               onChanged: (_) {},
                               onSubmitted: (_) {

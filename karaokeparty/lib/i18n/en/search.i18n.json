@@ -33,5 +33,6 @@
         "randomPickListTitle": "Some suggestions:",
         "rerollRandom": "Show new suggestions"
     },
-    "searchQueryParserError": "Unable to understand your search query."
+    "searchQueryParserError": "Unable to understand your search query.",
+    "searchHint": "Search"
 }
