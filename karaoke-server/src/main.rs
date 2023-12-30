@@ -1,4 +1,5 @@
 use std::{
+    collections::HashSet,
     net::{IpAddr, Ipv6Addr, SocketAddr},
     path::PathBuf,
     sync::Arc,
@@ -64,6 +65,7 @@ pub struct AppState {
     index: SearchIndex,
     playlist: Playlist,
     password: String,
+    languages: HashSet<String>,
 }
 
 #[tokio::main]
@@ -83,6 +85,7 @@ async fn main() -> anyhow::Result<()> {
 
     log::info!("Loading song database...");
     let song_db: Vec<Song>;
+    let languages: HashSet<String>;
     {
         let mut conn = Connection::open_with_flags(args.db, OpenFlags::SQLITE_OPEN_READ_ONLY)?;
         let tx = conn.transaction()?;
@@ -90,6 +93,8 @@ async fn main() -> anyhow::Result<()> {
         let mut stmt = tx.prepare(
             "SELECT rowid, title, artist, language, year, duration, lyrics, player_count, cover_path, audio_path FROM song ORDER BY title COLLATE NOCASE",
         )?;
+        let mut lang_stmt =
+            tx.prepare("SELECT DISTINCT language FROM song WHERE LANGUAGE IS NOT NULL")?;
         song_db = stmt
             .query_map((), |row| {
                 let row_id = row.get("rowid")?;
@@ -116,7 +121,10 @@ async fn main() -> anyhow::Result<()> {
                 }
             })
             .collect();
-    }
+        languages = lang_stmt
+            .query_map((), |row| row.get::<_, String>(0))?
+            .collect::<Result<_, _>>()?;
+    };
 
     let index = SearchIndex::new(song_db.iter())?;
     let song_count = song_db.len();
@@ -132,6 +140,7 @@ async fn main() -> anyhow::Result<()> {
         index,
         playlist,
         password: args.password,
+        languages,
     });
 
     let app = Router::new()
@@ -140,6 +149,7 @@ async fn main() -> anyhow::Result<()> {
         .route("/api/all_songs", get(get_all_songs))
         .route("/api/random_songs", get(get_random_songs))
         .route("/api/song_count", get(get_song_count))
+        .route("/api/languages", get(get_languages))
         .route("/ws", get(ws_handler))
         .nest_service("/media", ServeDir::new(args.media_path))
         .nest_service("/", ServeDir::new(args.web_app))
@@ -238,4 +248,10 @@ async fn get_random_songs(
             StatusCode::INTERNAL_SERVER_ERROR
         })?;
     Ok(Json(result))
+}
+
+async fn get_languages(State(state): State<Arc<AppState>>) -> Json<Vec<String>> {
+    let mut languages: Vec<_> = state.languages.iter().cloned().collect();
+    languages.sort();
+    Json(languages)
 }

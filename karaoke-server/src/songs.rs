@@ -50,7 +50,7 @@ impl SearchIndex {
         let rowid_field = schema_builder.add_i64_field("rowid", INDEXED | STORED);
         let title_field = schema_builder.add_text_field("title", TEXT | STORED);
         let artist_field = schema_builder.add_text_field("artist", TEXT | STORED);
-        let language_field = schema_builder.add_text_field("language", STORED);
+        let language_field = schema_builder.add_text_field("language", TEXT | STORED);
         let year_field = schema_builder.add_text_field("year", STRING | STORED);
         let lyrics_field = schema_builder.add_text_field("lyrics", TEXT | STORED);
         let duration_field = schema_builder.add_f64_field("duration", STORED);
@@ -103,7 +103,13 @@ impl SearchIndex {
 
         let mut query_parser = QueryParser::for_index(
             &index,
-            vec![artist_field, title_field, year_field, lyrics_field],
+            vec![
+                artist_field,
+                title_field,
+                language_field,
+                year_field,
+                lyrics_field,
+            ],
         );
         query_parser.set_field_fuzzy(lyrics_field, false, 2, true);
         query_parser.set_field_boost(title_field, 3.0);
