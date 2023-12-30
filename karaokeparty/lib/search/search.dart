@@ -54,7 +54,8 @@ class _SearchState extends State<Search> {
     final search = [
       text,
       if (searchFilter.language != null) 'language:"${searchFilter.language!}"',
-      if (searchFilter.decade != null) 'year:[${searchFilter.decade!}]'
+      if (searchFilter.decade != null) 'year:[${searchFilter.decade!}]',
+      if (searchFilter.duet != null) 'duet:${searchFilter.duet}',
     ].join(' AND ');
 
     setState(() {
@@ -254,6 +255,48 @@ class _SearchState extends State<Search> {
                                   },
                                   isSelected: searchFilter.decade != null,
                                   icon: const Icon(Icons.calendar_month)),
+                            ),
+                          ),
+                          Tooltip(
+                            message: context.t.search.searchFilterDuetTooltip,
+                            child: MenuAnchor(
+                              menuChildren: [
+                                RadioMenuButton(
+                                    value: null,
+                                    groupValue: searchFilter.duet,
+                                    onChanged: (_) {
+                                      context.read<SearchFilterCubit>().duet = null;
+                                      _updateSearch(context);
+                                    },
+                                    child: Text(context.t.search.duets.dontCare)),
+                                const Divider(),
+                                RadioMenuButton(
+                                    value: true,
+                                    groupValue: searchFilter.duet,
+                                    onChanged: (_) {
+                                      context.read<SearchFilterCubit>().duet = true;
+                                      _updateSearch(context);
+                                    },
+                                    child: Text(context.t.search.duets.onlyDuets)),
+                                RadioMenuButton(
+                                    value: false,
+                                    groupValue: searchFilter.duet,
+                                    onChanged: (_) {
+                                      context.read<SearchFilterCubit>().duet = false;
+                                      _updateSearch(context);
+                                    },
+                                    child: Text(context.t.search.duets.noDuets)),
+                              ],
+                              builder: (context, controller, child) => IconButton(
+                                  onPressed: () {
+                                    if (controller.isOpen) {
+                                      controller.close();
+                                    } else {
+                                      controller.open();
+                                    }
+                                  },
+                                  isSelected: searchFilter.duet != null,
+                                  icon: const Icon(Icons.group)),
                             ),
                           ),
                         ],
