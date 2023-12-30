@@ -69,6 +69,14 @@ fn parse_txt(
         _ => panic!("Song {} has remote audio", song.header.title),
     };
 
+    let player_count = (song.lines.iter().any(|line| {
+        line.notes.iter().any(|note| match note {
+            ultrastar_txt::Note::PlayerChange { player } => *player == 2,
+            _ => false,
+        })
+    }) as u32)
+        + 1;
+
     let changes = insert_stmt.execute((
         full_path.as_os_str().as_bytes(),
         song.header.title.trim(),
@@ -93,6 +101,7 @@ fn parse_txt(
             })
             .collect::<Vec<_>>()
             .join("\n"),
+        player_count,
         cover_path,
         audio_path,
     ))?;
@@ -151,6 +160,7 @@ fn main() -> anyhow::Result<()> {
         year INTEGER,
         duration REAL NOT NULL,
         lyrics TEXT,
+        player_count INTEGER,
         cover_path BLOB,
         audio_path BLOB
     )"#,
@@ -169,8 +179,8 @@ fn main() -> anyhow::Result<()> {
         let mut new_songs = HashSet::new();
 
         let mut insert_stmt = tx.prepare(
-            r#"INSERT INTO song (path, title, artist, language, year, duration, lyrics, cover_path, audio_path) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9)
-            ON CONFLICT (path) DO UPDATE SET title=?2, artist=?3, language=?4, year=?5, duration=?6, lyrics=?7, cover_path=?8, audio_path=?9"#)?;
+            r#"INSERT INTO song (path, title, artist, language, year, duration, lyrics, player_count, cover_path, audio_path) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10)
+            ON CONFLICT (path) DO UPDATE SET title=?2, artist=?3, language=?4, year=?5, duration=?6, lyrics=?7, player_count = ?8, cover_path=?9, audio_path=?10"#)?;
         walk_dir(
             args.path,
             args.strip_components,

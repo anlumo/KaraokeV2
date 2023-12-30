@@ -88,7 +88,7 @@ async fn main() -> anyhow::Result<()> {
         let tx = conn.transaction()?;
 
         let mut stmt = tx.prepare(
-            "SELECT rowid, title, artist, language, year, duration, lyrics, cover_path, audio_path FROM song ORDER BY title COLLATE NOCASE",
+            "SELECT rowid, title, artist, language, year, duration, lyrics, player_count, cover_path, audio_path FROM song ORDER BY title COLLATE NOCASE",
         )?;
         song_db = stmt
             .query_map((), |row| {
@@ -103,6 +103,7 @@ async fn main() -> anyhow::Result<()> {
                     year: row.get("year")?,
                     duration: row.get("duration")?,
                     lyrics: row.get("lyrics")?,
+                    duet: row.get::<_, i32>("player_count")? > 1,
                     cover_path: cover_path.map(urlencode_path),
                     audio_path: urlencode_path(audio_path.unwrap()),
                 })

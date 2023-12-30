@@ -6,6 +6,7 @@ final class Song {
   final int? year;
   final double duration;
   final String? lyrics;
+  final bool duet;
   final String? coverPath;
   final String audioPath;
 
@@ -17,6 +18,7 @@ final class Song {
     required this.year,
     required this.duration,
     required this.lyrics,
+    required this.duet,
     required this.coverPath,
     required this.audioPath,
   });
@@ -29,6 +31,7 @@ final class Song {
         year = 1234,
         duration = 260.0,
         lyrics = null,
+        duet = false,
         coverPath = null,
         audioPath = '';
 
@@ -40,6 +43,7 @@ final class Song {
         year = json['year'] as int?,
         duration = json['duration'],
         lyrics = json['lyrics'],
+        duet = json['duet'] ?? false,
         coverPath = json['coverPath'],
         audioPath = json['audioPath'];
 }

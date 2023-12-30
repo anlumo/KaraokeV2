@@ -28,6 +28,7 @@ class SongCard extends StatelessWidget {
   final title = ConstraintId('title');
   final coverImage = ConstraintId('coverImage');
   final playAudio = ConstraintId('playAudio');
+  final duet = ConstraintId('duet');
   final String? singer;
   final DateTime? predictedPlaytime;
   final ServerApi api;
@@ -55,6 +56,19 @@ class SongCard extends StatelessWidget {
           child: ConstraintLayout(
             showHelperWidgets: true,
             children: [
+              if (singer != null)
+                Text(
+                  singer!,
+                  textAlign: TextAlign.start,
+                  style: theme.textTheme.labelLarge!
+                      .copyWith(overflow: TextOverflow.ellipsis, color: theme.colorScheme.primary),
+                ).applyConstraint(
+                  centerVerticalTo: song.duet ? duet : null,
+                  top: song.duet ? null : parent.top.margin(8),
+                  left: song.duet ? duet.right.margin(8) : parent.left.margin(8),
+                  right: coverImage.left.margin(8),
+                  width: matchConstraint,
+                ),
               Text(
                 song.title,
                 textAlign: TextAlign.start,
@@ -113,17 +127,6 @@ class SongCard extends StatelessWidget {
                 height: 80,
                 centerRightTo: parent.rightMargin(8),
               ),
-              if (singer != null)
-                Text(
-                  singer!,
-                  textAlign: TextAlign.start,
-                  style: theme.textTheme.labelLarge!
-                      .copyWith(overflow: TextOverflow.ellipsis, color: theme.colorScheme.primary),
-                ).applyConstraint(
-                  topLeftTo: parent.topMargin(8).leftMargin(8),
-                  right: coverImage.left.margin(8),
-                  width: matchConstraint,
-                ),
               if (song.lyrics != null)
                 Tooltip(
                   message: context.t.core.showLyricsButton,
@@ -132,7 +135,7 @@ class SongCard extends StatelessWidget {
                         showLyricsDialog(context, song);
                       },
                       icon: const Icon(Icons.lyrics)),
-                ).applyConstraint(right: playAudio.left.margin(4), top: parent.top.margin(4)),
+                ).applyConstraint(right: playAudio.left, top: parent.top.margin(4)),
               Tooltip(
                 message: context.t.core.playAudioButton,
                 child: IconButton(
@@ -141,6 +144,15 @@ class SongCard extends StatelessWidget {
                     },
                     icon: const Icon(Icons.music_note)),
               ).applyConstraint(id: playAudio, right: coverImage.left.margin(8), top: parent.top.margin(4)),
+              if (song.duet)
+                Tooltip(
+                  message: context.t.core.twoPlayerSongTooltip,
+                  child: const Icon(Icons.group),
+                ).applyConstraint(
+                  id: duet,
+                  left: parent.left.margin(8),
+                  top: parent.top.margin(8),
+                ),
             ],
           ),
         ),

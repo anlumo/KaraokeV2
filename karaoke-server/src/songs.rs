@@ -21,6 +21,7 @@ pub struct Song {
     pub duration: f64,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub lyrics: Option<String>,
+    pub duet: bool,
     #[serde(default)]
     pub cover_path: Option<String>,
     pub audio_path: String,
@@ -34,6 +35,7 @@ pub struct SearchIndex {
     year_field: Field,
     lyrics_field: Field,
     duration_field: Field,
+    duet_field: Field,
     cover_field: Field,
     audio_field: Field,
 
@@ -52,6 +54,7 @@ impl SearchIndex {
         let year_field = schema_builder.add_text_field("year", STRING | STORED);
         let lyrics_field = schema_builder.add_text_field("lyrics", TEXT | STORED);
         let duration_field = schema_builder.add_f64_field("duration", STORED);
+        let duet_field = schema_builder.add_bool_field("duet", INDEXED | STORED);
         let cover_field = schema_builder.add_text_field("cover", STORED);
         let audio_field = schema_builder.add_text_field("audio", STORED);
         let schema = schema_builder.build();
@@ -86,6 +89,7 @@ impl SearchIndex {
             if let Some(song_lyrics) = &song.lyrics {
                 doc.add_text(lyrics_field, song_lyrics);
             }
+            doc.add_bool(duet_field, song.duet);
             if let Some(cover) = &song.cover_path {
                 doc.add_text(cover_field, cover);
             }
@@ -114,6 +118,7 @@ impl SearchIndex {
             year_field,
             lyrics_field,
             duration_field,
+            duet_field,
             cover_field,
             audio_field,
             reader,
@@ -162,6 +167,10 @@ impl SearchIndex {
                     lyrics: song
                         .get_first(self.lyrics_field)
                         .map(|lyrics| lyrics.as_text().unwrap().to_owned()),
+                    duet: song
+                        .get_first(self.duet_field)
+                        .map(|duet| duet.as_bool().unwrap_or_default())
+                        .unwrap_or_default(),
                     cover_path: song
                         .get_first(self.cover_field)
                         .map(|cover| cover.as_text().unwrap().to_owned()),

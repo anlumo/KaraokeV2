@@ -3,6 +3,7 @@
     "searchTabTooltip": "Search",
     "masterListTooltip": "Browse library",
     "playlistTooltip": "Current playlist",
+    "twoPlayerSongTooltip": "Duet",
     "songCardArtistYear": "$artist ($year)",
     "showLyricsButton": "Show lyrics",
     "playAudioButton": "Play audio",
