@@ -199,6 +199,7 @@ class _SearchState extends State<Search> {
                                         controller.open();
                                       }
                                     },
+                                    isSelected: searchFilter.language != null,
                                     icon: const Icon(Icons.language))),
                           ),
                           Tooltip(
@@ -234,6 +235,7 @@ class _SearchState extends State<Search> {
                                       controller.open();
                                     }
                                   },
+                                  isSelected: searchFilter.decade != null,
                                   icon: const Icon(Icons.calendar_month)),
                             ),
                           ),
