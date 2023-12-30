@@ -46,12 +46,13 @@ class _SearchState extends State<Search> {
   }
 
   void _updateSearch(BuildContext context) {
-    if (_controller.text.isEmpty) {
+    final text = _controller.text.trim();
+    if (text.isEmpty) {
       return;
     }
     final searchFilter = context.read<SearchFilterCubit>();
     final search = [
-      _controller.text,
+      text,
       if (searchFilter.language != null) 'language:"${searchFilter.language!}"',
       if (searchFilter.decade != null) 'year:[${searchFilter.decade!}]'
     ].join(' AND ');
