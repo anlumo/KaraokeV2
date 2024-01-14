@@ -25,24 +25,7 @@ args = ["build", "--bin", "karaoke-server", "--release"]
 
 [tasks.serve]
 command = "cargo"
-args = [
-    "run",
-    "--bin",
-    "karaoke-server",
-    "--",
-    "--db",
-    "songs.db",
-    "--playlist",
-    "playlist.json",
-    "--password",
-    "abc",
-    "--media-path",
-    "MasterCollection",
-    "--web-app",
-    "karaokeparty/build/web",
-    "--song-log",
-    "song_log.csv",
-]
+args = ["run", "--bin", "karaoke-server", "--", "-c", "config.example.yaml"]
 
 [tasks.import]
 command = "cargo"

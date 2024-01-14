@@ -13,7 +13,6 @@ use axum::{
     Json, Router,
 };
 use clap::Parser;
-use env_logger::Env;
 use now_playing::Playlist;
 use rand::Rng;
 use rusqlite::{Connection, OpenFlags};
@@ -24,40 +23,24 @@ use tower_http::{
 };
 
 use crate::{
+    config::parse_config,
     songs::{urlencode_path, SearchIndex, Song},
     websocket::ws_handler,
 };
 
+mod config;
 mod now_playing;
 mod songs;
 mod websocket;
 
 #[derive(Parser, Debug)]
 struct Args {
-    /// The path to the sqlite database with the song information.
-    #[clap(long)]
-    db: PathBuf,
-    /// The path to the persisted playlist file. Will be created if it doesn't exist.
-    #[clap(long)]
-    playlist: PathBuf,
-    /// The admin password for managing the playlist.
-    #[clap(long)]
-    password: String,
     /// The address and port to listen on (defaults to [::1]:8080).
     #[clap(short, long)]
     address: Option<SocketAddr>,
-    /// Verbose logging to stderr (read https://crates.io/crates/env_logger for more detailed configuration).
+    /// The path to the config file in toml format.
     #[clap(short, long)]
-    verbose: bool,
-    /// Path to the directory structure for the covers.
-    #[clap(short, long)]
-    media_path: PathBuf,
-    /// Path to the web app (directory containing index.html).
-    #[clap(short, long)]
-    web_app: PathBuf,
-    /// Path to the file that should contain the history of what was played.
-    #[clap(short, long)]
-    song_log: Option<PathBuf>,
+    config: PathBuf,
 }
 
 pub struct AppState {
@@ -71,23 +54,22 @@ pub struct AppState {
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
     let args = Args::parse();
+    let config = parse_config(args.config).await?;
+    log4rs::init_raw_config(config.logging)?;
 
-    if args.verbose {
-        env_logger::Builder::from_env(Env::default().default_filter_or("debug")).init();
-    } else {
-        env_logger::init();
-    }
-
-    let address = args.address.unwrap_or(SocketAddr::new(
-        IpAddr::V6(Ipv6Addr::new(0, 0, 0, 0, 0, 0, 0, 1)),
-        8080,
-    ));
+    let address = args.address.unwrap_or_else(|| {
+        config.server.listen.unwrap_or(SocketAddr::new(
+            IpAddr::V6(Ipv6Addr::new(0, 0, 0, 0, 0, 0, 0, 1)),
+            8080,
+        ))
+    });
 
     log::info!("Loading song database...");
     let song_db: Vec<Song>;
     let languages: HashSet<String>;
     {
-        let mut conn = Connection::open_with_flags(args.db, OpenFlags::SQLITE_OPEN_READ_ONLY)?;
+        let mut conn =
+            Connection::open_with_flags(config.paths.database, OpenFlags::SQLITE_OPEN_READ_ONLY)?;
         let tx = conn.transaction()?;
 
         let mut stmt = tx.prepare(
@@ -129,9 +111,9 @@ async fn main() -> anyhow::Result<()> {
     let index = SearchIndex::new(song_db.iter())?;
     let song_count = song_db.len();
     let playlist = Playlist::load(
-        args.playlist,
+        config.paths.playlist,
         song_db.iter().map(|song| song.row_id),
-        args.song_log.as_deref(),
+        config.paths.song_log.as_deref(),
     )
     .await?;
 
@@ -139,7 +121,7 @@ async fn main() -> anyhow::Result<()> {
         song_count,
         index,
         playlist,
-        password: args.password,
+        password: config.server.password,
         languages,
     });
 
@@ -151,8 +133,8 @@ async fn main() -> anyhow::Result<()> {
         .route("/api/song_count", get(get_song_count))
         .route("/api/languages", get(get_languages))
         .route("/ws", get(ws_handler))
-        .nest_service("/media", ServeDir::new(args.media_path))
-        .nest_service("/", ServeDir::new(args.web_app))
+        .nest_service("/media", ServeDir::new(config.paths.media))
+        .nest_service("/", ServeDir::new(config.paths.web_app))
         .with_state(state)
         .layer(
             TraceLayer::new_for_http()
