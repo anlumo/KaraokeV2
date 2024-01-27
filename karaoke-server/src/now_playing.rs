@@ -16,6 +16,8 @@ use uuid::Uuid;
 
 use crate::songs::SearchIndex;
 
+const MAX_PLAY_HISTORY: usize = 3;
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct PlaylistEntry {
@@ -29,7 +31,7 @@ pub struct PlaylistEntry {
 #[derive(Debug, Serialize, Deserialize, Default)]
 #[serde(rename_all = "camelCase")]
 struct InnerPlaylist {
-    now_playing: Option<PlaylistEntry>,
+    play_history: VecDeque<PlaylistEntry>,
     list: VecDeque<PlaylistEntry>,
     #[serde(skip, default)]
     listeners: HashMap<Uuid, UnboundedSender<String>>,
@@ -74,11 +76,9 @@ impl Playlist {
                 song_queue
                     .list
                     .retain(|entry| valid_songs.contains(&entry.song));
-                if let Some(now_playing) = &song_queue.now_playing {
-                    if !valid_songs.contains(&now_playing.song) {
-                        song_queue.now_playing = None;
-                    }
-                }
+                song_queue
+                    .play_history
+                    .retain(|entry| valid_songs.contains(&entry.song));
 
                 Ok(Self {
                     valid_songs,
@@ -156,17 +156,20 @@ impl Playlist {
                     log::error!("Fetching song for song log failed: {err:?}");
                 }
                 Ok(songs) => {
-                    let new_playing = queue.list.remove(entry);
-                    let old_playing = if let Some(mut new_playing) = new_playing {
-                        new_playing.predicted_end =
-                            OffsetDateTime::now_utc() + Duration::seconds_f64(songs[0].duration);
-                        queue.now_playing.replace(new_playing)
-                    } else {
-                        queue.now_playing.take()
-                    };
+                    if queue.play_history.len() >= MAX_PLAY_HISTORY {
+                        queue.play_history.pop_front();
+                    }
+                    let old_playing_idx =
+                        (!queue.play_history.is_empty()).then(|| queue.play_history.len() - 1);
+
+                    if let Some(new_playing) = queue.list.remove(entry) {
+                        queue.play_history.push_back(new_playing);
+                    }
 
                     // Update intermission record
-                    if let Some(old_playing) = old_playing {
+                    if let Some(old_playing) =
+                        old_playing_idx.and_then(|idx| queue.play_history.get(idx))
+                    {
                         let duration = OffsetDateTime::now_utc() - old_playing.predicted_end;
                         // Ignore breaks that are 5 minutes or longer, since those aren't representative.
                         // Note that this might include breaks between whole parties, so it could be months as well.
@@ -319,8 +322,8 @@ impl Playlist {
             inner.list.len(),
         )?;
         let mut timestamp = inner
-            .now_playing
-            .as_ref()
+            .play_history
+            .back()
             .map(|entry| entry.predicted_end)
             .unwrap_or_else(OffsetDateTime::now_utc);
         let average_intermission = inner

@@ -4,12 +4,12 @@ import 'package:karaokeparty/model/playlist_entry.dart';
 part 'playlist_state.dart';
 
 class PlaylistCubit extends Cubit<PlaylistState> {
-  PlaylistCubit() : super(const PlaylistState(nowPlaying: null, songQueue: []));
+  PlaylistCubit() : super(const PlaylistState(playHistory: [], songQueue: []));
 
   void update({
-    required PlaylistEntry? nowPlaying,
+    required List<PlaylistEntry> playHistory,
     required List<PlaylistEntry> songQueue,
   }) {
-    emit(PlaylistState(nowPlaying: nowPlaying, songQueue: songQueue));
+    emit(PlaylistState(playHistory: playHistory, songQueue: songQueue));
   }
 }

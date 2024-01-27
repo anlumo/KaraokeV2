@@ -44,7 +44,7 @@ class SongCard extends StatelessWidget {
       child: Card(
         shape: selected
             ? RoundedRectangleBorder(
-                side: BorderSide(color: theme.colorScheme.primary, width: 2), borderRadius: BorderRadius.circular(4))
+                side: BorderSide(color: theme.colorScheme.primary, width: 2), borderRadius: BorderRadius.circular(12))
             : null,
         child: InkWell(
           borderRadius: BorderRadius.circular(4),

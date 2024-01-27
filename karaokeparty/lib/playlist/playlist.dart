@@ -9,7 +9,9 @@ import 'package:karaokeparty/api/cubit/connection_cubit.dart';
 import 'package:karaokeparty/api/cubit/playlist_cubit.dart';
 import 'package:karaokeparty/api/song_cache.dart';
 import 'package:karaokeparty/i18n/strings.g.dart';
+import 'package:karaokeparty/main.dart';
 import 'package:karaokeparty/model/playlist_entry.dart';
+import 'package:karaokeparty/now_playing/now_playing.dart';
 import 'package:karaokeparty/search/empty_state.dart';
 import 'package:karaokeparty/widgets/song_card.dart';
 
@@ -25,6 +27,7 @@ class Playlist extends StatefulWidget {
 
 class _PlaylistState extends State<Playlist> {
   List<PlaylistEntry>? _songQueue;
+  int? _songQueueNowPlaying;
   late final FocusNode _listFocusNode;
   int _selectedItem = 0;
 
@@ -136,7 +139,8 @@ class _PlaylistState extends State<Playlist> {
             ),
           WebSocketConnectedState(:final isAdmin) => BlocConsumer<PlaylistCubit, PlaylistState>(
               listener: (context, state) {
-                _songQueue = List.from(state.songQueue);
+                _songQueue = List.from(state.playHistory.followedBy(state.songQueue));
+                _songQueueNowPlaying = state.playHistory.length - 1;
                 if (_songQueue!.isNotEmpty && _selectedItem > _songQueue!.length - 1) {
                   setState(() {
                     _selectedItem = _songQueue!.length - 1;
@@ -144,7 +148,7 @@ class _PlaylistState extends State<Playlist> {
                 }
               },
               builder: (context, state) {
-                _songQueue ??= List.from(state.songQueue);
+                _songQueue ??= List.from(state.playHistory.followedBy(state.songQueue));
                 if (_songQueue?.isEmpty ?? true) {
                   return Center(
                     child: EmptyState(api: widget.api, explanation: context.t.playlist.emptyState),
@@ -165,6 +169,21 @@ class _PlaylistState extends State<Playlist> {
                               return AnimatedBuilder(
                                   animation: dragAnimation,
                                   builder: (context, child) {
+                                    log.d('render item $i singer ${item.singer}');
+
+                                    if (i == _songQueueNowPlaying) {
+                                      return NowPlaying(songCache: widget.songCache, api: widget.api, entry: item);
+                                    }
+                                    if (_songQueueNowPlaying != null && i < _songQueueNowPlaying!) {
+                                      return PlaylistSongCard(
+                                        songCache: widget.songCache,
+                                        entry: item,
+                                        api: widget.api,
+                                        selected: _selectedItem == i,
+                                        predictedPlayTime: null,
+                                      );
+                                    }
+
                                     final listItem = Row(
                                       children: [
                                         Tooltip(
@@ -187,9 +206,10 @@ class _PlaylistState extends State<Playlist> {
                                               entry: item,
                                               api: widget.api,
                                               selected: _selectedItem == i,
-                                              predictedPlayTime: i > 0
-                                                  ? _songQueue![i - 1].predictedEnd
-                                                  : state.nowPlaying?.predictedEnd,
+                                              predictedPlayTime:
+                                                  (i > 0 && (_songQueueNowPlaying == null || i > _songQueueNowPlaying!))
+                                                      ? _songQueue![i - 1].predictedEnd
+                                                      : null,
                                             ),
                                           ),
                                         ),
@@ -266,11 +286,17 @@ class _PlaylistState extends State<Playlist> {
                     primary: true,
                     items: _songQueue!,
                     itemBuilder: (context, itemAnimation, item, i) {
+                      if (i == _songQueueNowPlaying) {
+                        return NowPlaying(songCache: widget.songCache, api: widget.api, entry: item);
+                      }
+                      log.d('render item $i singer ${item.singer}');
                       return PlaylistSongCard(
                         songCache: widget.songCache,
                         entry: item,
                         api: widget.api,
-                        predictedPlayTime: i > 0 ? _songQueue![i - 1].predictedEnd : state.nowPlaying?.predictedEnd,
+                        predictedPlayTime: (i > 0 && (_songQueueNowPlaying == null || i > _songQueueNowPlaying!))
+                            ? _songQueue![i - 1].predictedEnd
+                            : null,
                       );
                     },
                     areItemsTheSame: (a, b) => a.id == b.id,

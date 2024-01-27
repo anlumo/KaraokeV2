@@ -3,7 +3,6 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_constraintlayout/flutter_constraintlayout.dart';
-import 'package:http/http.dart';
 import 'package:karaokeparty/add_dialog/add_dialog.dart';
 import 'package:karaokeparty/api/api.dart';
 import 'package:karaokeparty/api/cubit/connection_cubit.dart';

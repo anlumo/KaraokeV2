@@ -8,7 +8,6 @@ import 'package:karaokeparty/browse/browse.dart';
 import 'package:karaokeparty/i18n/strings.g.dart';
 import 'package:karaokeparty/intents.dart';
 import 'package:karaokeparty/login/login.dart';
-import 'package:karaokeparty/now_playing/now_playing.dart';
 import 'package:karaokeparty/playlist/playlist.dart';
 import 'package:karaokeparty/search/cubit/search_filter_cubit.dart';
 import 'package:karaokeparty/search/search.dart';
@@ -230,24 +229,14 @@ class _MyAppState extends State<MyApp> {
                               },
                               builder: (context, connectionState) {
                                 if (compactLayout) {
-                                  return Column(
-                                    children: [
-                                      Expanded(
-                                        child: TabBarView(children: [
-                                          Search(api: server),
-                                          Browse(api: server),
-                                          Playlist(
-                                            songCache: songCache,
-                                            api: server,
-                                          ),
-                                        ]),
-                                      ),
-                                      NowPlaying(
-                                        songCache: songCache,
-                                        api: server,
-                                      ),
-                                    ],
-                                  );
+                                  return TabBarView(children: [
+                                    Search(api: server),
+                                    Browse(api: server),
+                                    Playlist(
+                                      songCache: songCache,
+                                      api: server,
+                                    ),
+                                  ]);
                                 } else {
                                   final theme = Theme.of(context);
                                   return Row(
@@ -266,15 +255,8 @@ class _MyAppState extends State<MyApp> {
                                           width: wideLayoutSidebarWidth,
                                           child: Padding(
                                             padding: const EdgeInsets.symmetric(horizontal: 4.0),
-                                            child: Column(
-                                              children: [
-                                                Expanded(
-                                                  child: FocusTraversalGroup(
-                                                    child: Playlist(songCache: songCache, api: server),
-                                                  ),
-                                                ),
-                                                NowPlaying(songCache: songCache, api: server),
-                                              ],
+                                            child: FocusTraversalGroup(
+                                              child: Playlist(songCache: songCache, api: server),
                                             ),
                                           ),
                                         ),

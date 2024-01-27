@@ -77,15 +77,16 @@ class ConnectionCubit extends Cubit<WebSocketConnectionState> {
         }
         log.d('Received websocket message $json');
         try {
-          PlaylistEntry? nowPlaying;
-          if (json['nowPlaying'] != null) {
-            nowPlaying = PlaylistEntry.fromJson(json['nowPlaying']);
-          }
+          final playHistoryJson = json['playHistory'];
+          final List<PlaylistEntry> playHistory = (playHistoryJson is List<dynamic>)
+              ? playHistoryJson.map((entry) => PlaylistEntry.fromJson(entry)).toList(growable: false)
+              : const [];
+
           List<PlaylistEntry> songQueue = (json['list'] as List<dynamic>)
               .map((entry) => PlaylistEntry.fromJson(entry as Map<String, dynamic>))
               .toList(growable: false);
 
-          playlist.update(nowPlaying: nowPlaying, songQueue: songQueue);
+          playlist.update(playHistory: playHistory, songQueue: songQueue);
         } catch (e) {
           log.e('Failed parsing server message: $e');
         }

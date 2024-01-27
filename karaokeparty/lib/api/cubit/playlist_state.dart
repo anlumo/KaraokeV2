@@ -1,8 +1,8 @@
 part of 'playlist_cubit.dart';
 
 class PlaylistState {
-  const PlaylistState({required this.nowPlaying, required this.songQueue});
+  const PlaylistState({required this.playHistory, required this.songQueue});
 
-  final PlaylistEntry? nowPlaying;
+  final List<PlaylistEntry> playHistory;
   final List<PlaylistEntry> songQueue;
 }
