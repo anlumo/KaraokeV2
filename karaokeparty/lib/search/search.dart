@@ -3,10 +3,8 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_constraintlayout/flutter_constraintlayout.dart';
-import 'package:karaokeparty/add_dialog/add_dialog.dart';
 import 'package:karaokeparty/api/api.dart';
 import 'package:karaokeparty/api/cubit/connection_cubit.dart';
-import 'package:karaokeparty/api/cubit/playlist_cubit.dart';
 import 'package:karaokeparty/i18n/strings.g.dart';
 import 'package:karaokeparty/model/song.dart';
 import 'package:karaokeparty/search/cubit/search_filter_cubit.dart';
@@ -50,16 +48,13 @@ class _SearchState extends State<Search> {
       return;
     }
     final searchFilter = context.read<SearchFilterCubit>();
-    final search = [
-      text,
-      if (searchFilter.language != null) 'language:"${searchFilter.language!}"',
-      if (searchFilter.decade != null) 'year:[${searchFilter.decade!}]',
-      if (searchFilter.duet != null) 'duet:${searchFilter.duet}',
-    ].join(' AND ');
+    final search = searchFilter.queryString(text);
 
-    setState(() {
-      _searchResults = widget.api.search(search);
-    });
+    if (search != null) {
+      setState(() {
+        _searchResults = widget.api.search(search);
+      });
+    }
   }
 
   @override

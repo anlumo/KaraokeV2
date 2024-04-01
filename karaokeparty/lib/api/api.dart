@@ -68,8 +68,13 @@ final class ServerApi {
     return (jsonDecode(json) as List<dynamic>).map((song) => Song.fromJson(song)).firstOrNull;
   }
 
-  Future<List<Song>?> fetchRandomSongs(int count) async {
-    final response = await client.get(Uri.parse('${serverHost.api}/random_songs?count=$count'));
+  Future<List<Song>?> fetchRandomSongs(int count, {String? query}) async {
+    var uri = Uri.parse('${serverHost.api}/random_songs');
+    final queryParameters = <String, String>{
+      'count': count.toString(),
+      if (query != null) 'query': query,
+    };
+    final response = await client.get(uri.replace(queryParameters: queryParameters));
     if (response.statusCode != 200) {
       throw ServerError(response);
     }
