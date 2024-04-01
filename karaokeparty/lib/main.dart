@@ -64,6 +64,10 @@ class _MyAppState extends State<MyApp> {
   late final ServerApi server;
   final songCache = SongCache();
 
+  final _searchKey = GlobalKey(debugLabel: 'Search');
+  final _browseKey = GlobalKey(debugLabel: 'Browse');
+  final _playlistKey = GlobalKey(debugLabel: 'Playlist');
+
   @override
   void initState() {
     super.initState();
@@ -130,6 +134,14 @@ class _MyAppState extends State<MyApp> {
               );
             case WebSocketConnectedState(:final isAdmin):
               final compactLayout = MediaQuery.sizeOf(context).width <= wideLayoutSidebarWidth * 2;
+
+              final search = Search(key: _searchKey, api: server);
+              final browse = Browse(key: _browseKey, api: server);
+              final playlist = Playlist(
+                key: _playlistKey,
+                songCache: songCache,
+                api: server,
+              );
 
               return MultiBlocProvider(
                 providers: [
@@ -237,24 +249,14 @@ class _MyAppState extends State<MyApp> {
                               },
                               builder: (context, connectionState) {
                                 if (compactLayout) {
-                                  return TabBarView(children: [
-                                    Search(api: server),
-                                    Browse(api: server),
-                                    Playlist(
-                                      songCache: songCache,
-                                      api: server,
-                                    ),
-                                  ]);
+                                  return TabBarView(children: [search, browse, playlist]);
                                 } else {
                                   final theme = Theme.of(context);
                                   return Row(
                                     children: [
                                       Expanded(
                                         child: TabBarView(
-                                          children: [
-                                            Search(api: server),
-                                            Browse(api: server),
-                                          ],
+                                          children: [search, browse],
                                         ),
                                       ),
                                       ColoredBox(
@@ -264,7 +266,7 @@ class _MyAppState extends State<MyApp> {
                                           child: Padding(
                                             padding: const EdgeInsets.symmetric(horizontal: 4.0),
                                             child: FocusTraversalGroup(
-                                              child: Playlist(songCache: songCache, api: server),
+                                              child: playlist,
                                             ),
                                           ),
                                         ),
