@@ -64,13 +64,11 @@ class AdminList extends StatelessWidget {
 
                       final listItem = Row(
                         children: [
-                          Tooltip(
-                            message: context.t.playlist.playTooltip,
-                            child: IconButton(
-                                onPressed: () {
-                                  (connectionState as WebSocketConnectedState).play(item.id);
-                                },
-                                icon: const Icon(Icons.play_arrow)),
+                          IconButton(
+                            onPressed: () {
+                              (connectionState as WebSocketConnectedState).play(item.id);
+                            },
+                            icon: const Icon(Icons.play_arrow),
                           ),
                           Expanded(
                             child: GestureDetector(

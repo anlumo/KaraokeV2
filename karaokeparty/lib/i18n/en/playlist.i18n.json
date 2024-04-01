@@ -5,7 +5,6 @@
         "closeButton": "Close"
     },
     "deleteLabel": "Delete",
-    "playTooltip": "Play",
     "emptyState": "Nobody has requested a song yet. Now is the best time to request one yourself!",
     "predictedPlayTimeInMinutes": "in $min min",
     "predictedPlayTimeInThePast": "now"
