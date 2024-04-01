@@ -18,6 +18,8 @@ pub struct Paths {
     pub playlist: PathBuf,
     /// Path to the file that should contain the history of what was played.
     pub song_log: Option<PathBuf>,
+    /// Path to the file that should contain the song suggestions that were made.
+    pub suggestion_log: PathBuf,
 }
 
 #[derive(Deserialize, Debug)]

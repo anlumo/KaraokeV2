@@ -9,6 +9,7 @@ import 'package:karaokeparty/i18n/strings.g.dart';
 import 'package:karaokeparty/model/song.dart';
 import 'package:karaokeparty/search/cubit/search_filter_cubit.dart';
 import 'package:karaokeparty/search/empty_state.dart';
+import 'package:karaokeparty/search/suggest_song.dart';
 import 'package:karaokeparty/widgets/song_card.dart';
 
 class Search extends StatefulWidget {
@@ -22,6 +23,7 @@ class Search extends StatefulWidget {
 
 class _SearchState extends State<Search> {
   Future<List<Song>>? _searchResults;
+  String? _searchedText;
   final _controller = TextEditingController();
   final searchBar = ConstraintId('searchbar');
   final _searchBarFocusNode = FocusNode(debugLabel: 'searchbar');
@@ -52,6 +54,7 @@ class _SearchState extends State<Search> {
 
     if (search != null) {
       setState(() {
+        _searchedText = text;
         _searchResults = widget.api.search(search);
       });
     }
@@ -97,6 +100,15 @@ class _SearchState extends State<Search> {
                       }
                       if (!snapshot.hasData) {
                         return const Center(child: SizedBox(width: 50, height: 50, child: CircularProgressIndicator()));
+                      }
+                      if (snapshot.data!.isEmpty && _searchedText != null) {
+                        return Padding(
+                          padding: const EdgeInsets.only(left: 16, right: 16, top: 80),
+                          child: SuggestSong(
+                            api: widget.api,
+                            failedSearch: _searchedText!,
+                          ),
+                        );
                       }
                       return ListView.builder(
                         primary: true,
@@ -153,6 +165,7 @@ class _SearchState extends State<Search> {
                                         _controller.clear();
                                         setState(() {
                                           _searchResults = null;
+                                          _searchedText = null;
                                         });
                                       },
                                       icon: const Icon(Icons.clear),

@@ -4,6 +4,7 @@
 *.db
 /playlist.json
 /song_log.csv
+/suggestions.csv
 
 # Miscellaneous
 *.class

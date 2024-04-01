@@ -96,4 +96,15 @@ final class ServerApi {
         }));
     }
   }
+
+  Future<void> suggestSong({required String name, required String suggestion}) async {
+    var uri = Uri.parse('${serverHost.api}/suggest');
+    final queryParameters = <String, String>{
+      'name': name,
+    };
+    final response = await client.post(uri.replace(queryParameters: queryParameters), body: suggestion);
+    if (response.statusCode ~/ 100 != 2) {
+      throw ServerError(response);
+    }
+  }
 }

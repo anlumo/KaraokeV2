@@ -13,9 +13,16 @@ use axum::{
     Json, Router,
 };
 use clap::Parser;
+use csv::{StringRecord, Writer};
 use now_playing::Playlist;
 use rusqlite::{Connection, OpenFlags};
 use serde::Deserialize;
+use time::{format_description::well_known::Rfc3339, OffsetDateTime};
+use tokio::{
+    fs::{File, OpenOptions},
+    io::AsyncWriteExt,
+    sync::Mutex,
+};
 use tower_http::{
     services::ServeDir,
     trace::{DefaultMakeSpan, TraceLayer},
@@ -48,6 +55,7 @@ pub struct AppState {
     playlist: Playlist,
     password: String,
     languages: HashSet<String>,
+    suggest_log: Mutex<File>,
 }
 
 #[tokio::main]
@@ -122,6 +130,13 @@ async fn main() -> anyhow::Result<()> {
         playlist,
         password: config.server.password,
         languages,
+        suggest_log: Mutex::new(
+            OpenOptions::new()
+                .append(true)
+                .create(true)
+                .open(config.paths.suggestion_log)
+                .await?,
+        ),
     });
 
     let app = Router::new()
@@ -131,6 +146,7 @@ async fn main() -> anyhow::Result<()> {
         .route("/api/random_songs", get(get_random_songs))
         .route("/api/song_count", get(get_song_count))
         .route("/api/languages", get(get_languages))
+        .route("/api/suggest", post(suggest))
         .route("/ws", get(ws_handler))
         .nest_service("/media", ServeDir::new(config.paths.media))
         .nest_service("/", ServeDir::new(config.paths.web_app))
@@ -233,4 +249,25 @@ async fn get_languages(State(state): State<Arc<AppState>>) -> Json<Vec<String>> 
     let mut languages: Vec<_> = state.languages.iter().cloned().collect();
     languages.sort();
     Json(languages)
+}
+
+#[derive(Debug, Deserialize)]
+struct Suggest {
+    name: String,
+}
+
+async fn suggest(
+    State(state): State<Arc<AppState>>,
+    Query(Suggest { name }): Query<Suggest>,
+    suggest_str: String,
+) {
+    let mut suggest_log = state.suggest_log.lock().await;
+    let timestamp = OffsetDateTime::now_utc().format(&Rfc3339).unwrap();
+    let record = StringRecord::from(vec![&timestamp, &name, &suggest_str]);
+    let mut writer = Writer::from_writer(Vec::new());
+    writer.write_record(&record).unwrap();
+
+    if let Err(err) = suggest_log.write_all(&writer.into_inner().unwrap()).await {
+        log::error!("Failed writing song log: {err:?}");
+    }
 }

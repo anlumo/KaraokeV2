@@ -4,6 +4,7 @@ paths:
   web_app: karaokeparty/build/web
   playlist: playlist.json
   song_log: song_log.csv
+  suggestion_log: suggestions.csv
 
 server:
   listen: "[::1]:8080"
