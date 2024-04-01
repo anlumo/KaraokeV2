@@ -68,24 +68,7 @@ class _AddDialogState extends State<_AddDialog> {
     return AlertDialog(
       insetPadding: const EdgeInsets.symmetric(vertical: 24, horizontal: 8),
       contentPadding: const EdgeInsets.all(16),
-      title: Row(
-        children: [
-          Expanded(child: Text(context.t.search.addDialog.title)),
-          Tooltip(
-            message: context.t.search.randomPickButton,
-            child: IconButton(
-              onPressed: () async {
-                Navigator.of(context).pop();
-                final songs = await widget.api.fetchRandomSongs(1);
-                if (songs != null && songs.length == 1 && context.mounted) {
-                  showAddSongDialog(context, song: songs.first, api: widget.api, playlistCubit: widget.playlistCubit);
-                }
-              },
-              icon: const Icon(Icons.casino),
-            ),
-          ),
-        ],
-      ),
+      title: Text(context.t.search.addDialog.title),
       actions: [
         TextButton(
             onPressed: () {

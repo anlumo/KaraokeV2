@@ -150,33 +150,19 @@ class _SearchState extends State<Search> {
                               },
                               leading: const Icon(Icons.search),
                               trailing: [
-                                Tooltip(
-                                  message: _controller.text.isNotEmpty
-                                      ? context.t.search.clearTextButton
-                                      : context.t.search.randomPickButton,
-                                  child: _controller.text.isNotEmpty
-                                      ? IconButton(
-                                          onPressed: () {
-                                            _controller.clear();
-                                            setState(() {
-                                              _searchResults = null;
-                                            });
-                                          },
-                                          icon: const Icon(Icons.clear))
-                                      : IconButton(
-                                          onPressed: () async {
-                                            final songs = await widget.api.fetchRandomSongs(1);
-                                            if (songs != null && songs.length == 1 && context.mounted) {
-                                              showAddSongDialog(
-                                                context,
-                                                song: songs.first,
-                                                api: widget.api,
-                                                playlistCubit: context.read<PlaylistCubit>(),
-                                              );
-                                            }
-                                          },
-                                          icon: const Icon(Icons.casino)),
-                                ),
+                                if (_controller.text.isNotEmpty)
+                                  Tooltip(
+                                    message: context.t.search.clearTextButton,
+                                    child: IconButton(
+                                      onPressed: () {
+                                        _controller.clear();
+                                        setState(() {
+                                          _searchResults = null;
+                                        });
+                                      },
+                                      icon: const Icon(Icons.clear),
+                                    ),
+                                  ),
                               ],
                             ),
                           ),
