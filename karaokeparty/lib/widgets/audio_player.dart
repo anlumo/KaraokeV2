@@ -5,18 +5,17 @@ import 'package:flutter/material.dart';
 import 'package:karaokeparty/api/api.dart';
 import 'package:karaokeparty/i18n/strings.g.dart';
 import 'package:karaokeparty/model/song.dart';
-import 'package:karaokeparty/widgets/song_card.dart';
 
-class _AudioPlayer extends StatefulWidget {
-  const _AudioPlayer({required this.song});
+class SongPlayer extends StatefulWidget {
+  const SongPlayer({required this.song, super.key});
 
   final Song song;
 
   @override
-  State<_AudioPlayer> createState() => _AudioPlayerState();
+  State<SongPlayer> createState() => _SongPlayerState();
 }
 
-class _AudioPlayerState extends State<_AudioPlayer> {
+class _SongPlayerState extends State<SongPlayer> {
   final player = AudioPlayer();
   var duration = Duration.zero;
   var position = Duration.zero;
@@ -71,116 +70,80 @@ class _AudioPlayerState extends State<_AudioPlayer> {
 
   @override
   Widget build(BuildContext context) {
-    return AlertDialog(
-      insetPadding: const EdgeInsets.all(8),
-      contentPadding: const EdgeInsets.all(16),
-      title: Text(widget.song.title),
-      icon: coverImageWidget(),
-      actions: [
-        OutlinedButton(
-          onPressed: () {
-            Navigator.of(context).pop();
-          },
-          child: Text(context.t.audioplayer.closeButton),
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          widget.song.year != null
+              ? context.t.core.songCardArtistYear(artist: widget.song.artist, year: widget.song.year!)
+              : widget.song.artist,
+        ),
+        Row(
+          children: [
+            Text(_formatDuration(position)),
+            Expanded(
+              child: Slider(
+                max: max(duration.inMilliseconds, position.inMilliseconds).toDouble(),
+                value: position.inMilliseconds.toDouble(),
+                onChanged: (value) {
+                  player.seek(Duration(milliseconds: value.round()));
+                },
+              ),
+            ),
+            Text(_formatDuration(duration)),
+          ],
+        ),
+        Wrap(
+          children: [
+            Tooltip(
+              message: context.t.audioplayer.mediaButtonRewind,
+              child: IconButton(
+                onPressed: () {
+                  player.seek(Duration.zero);
+                },
+                icon: const Icon(Icons.fast_rewind),
+              ),
+            ),
+            Tooltip(
+              message: context.t.audioplayer.mediaButtonRewind10Seconds,
+              child: IconButton(
+                onPressed: () {
+                  player.seek(position - const Duration(seconds: 10));
+                },
+                icon: const Icon(Icons.replay_10),
+              ),
+            ),
+            (playerState == PlayerState.playing)
+                ? Tooltip(
+                    message: context.t.audioplayer.mediaButtonPause,
+                    child: IconButton(
+                      onPressed: () {
+                        player.pause();
+                      },
+                      icon: const Icon(Icons.pause),
+                    ),
+                  )
+                : Tooltip(
+                    message: context.t.audioplayer.mediaButtonPlay,
+                    child: IconButton(
+                      onPressed: () {
+                        player.resume();
+                      },
+                      icon: const Icon(Icons.play_arrow),
+                    ),
+                  ),
+            Tooltip(
+              message: context.t.audioplayer.mediaButtonSkip10Seconds,
+              child: IconButton(
+                onPressed: () {
+                  player.seek(position + const Duration(seconds: 10));
+                },
+                icon: const Icon(Icons.forward_10),
+              ),
+            ),
+          ],
         ),
       ],
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            widget.song.year != null
-                ? context.t.core.songCardArtistYear(artist: widget.song.artist, year: widget.song.year!)
-                : widget.song.artist,
-          ),
-          Row(
-            children: [
-              Text(_formatDuration(position)),
-              Expanded(
-                child: Slider(
-                  max: max(duration.inMilliseconds, position.inMilliseconds).toDouble(),
-                  value: position.inMilliseconds.toDouble(),
-                  onChanged: (value) {
-                    player.seek(Duration(milliseconds: value.round()));
-                  },
-                ),
-              ),
-              Text(_formatDuration(duration)),
-            ],
-          ),
-          Wrap(
-            children: [
-              Tooltip(
-                message: context.t.audioplayer.mediaButtonRewind,
-                child: IconButton(
-                  onPressed: () {
-                    player.seek(Duration.zero);
-                  },
-                  icon: const Icon(Icons.fast_rewind),
-                ),
-              ),
-              Tooltip(
-                message: context.t.audioplayer.mediaButtonRewind10Seconds,
-                child: IconButton(
-                  onPressed: () {
-                    player.seek(position - const Duration(seconds: 10));
-                  },
-                  icon: const Icon(Icons.replay_10),
-                ),
-              ),
-              (playerState == PlayerState.playing)
-                  ? Tooltip(
-                      message: context.t.audioplayer.mediaButtonPause,
-                      child: IconButton(
-                        onPressed: () {
-                          player.pause();
-                        },
-                        icon: const Icon(Icons.pause),
-                      ),
-                    )
-                  : Tooltip(
-                      message: context.t.audioplayer.mediaButtonPlay,
-                      child: IconButton(
-                        onPressed: () {
-                          player.resume();
-                        },
-                        icon: const Icon(Icons.play_arrow),
-                      ),
-                    ),
-              Tooltip(
-                message: context.t.audioplayer.mediaButtonSkip10Seconds,
-                child: IconButton(
-                  onPressed: () {
-                    player.seek(position + const Duration(seconds: 10));
-                  },
-                  icon: const Icon(Icons.forward_10),
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
     );
   }
-
-  Image coverImageWidget() => Image.network(
-        '${serverHost.media}/${widget.song.coverPath}',
-        loadingBuilder: (BuildContext context, Widget child, ImageChunkEvent? loadingProgress) {
-          if (loadingProgress == null) {
-            return child;
-          }
-          return Center(
-            child: CircularProgressIndicator(
-              value: loadingProgress.expectedTotalBytes != null
-                  ? loadingProgress.cumulativeBytesLoaded / loadingProgress.expectedTotalBytes!
-                  : null,
-            ),
-          );
-        },
-        errorBuilder: (context, error, stackTrace) => const PlaceholderCover(),
-      );
 }
-
-Future<void> showAudioPlayer(BuildContext context, Song song) => showDialog(
-      context: context,
-      builder: (context) => _AudioPlayer(song: song),
-    );

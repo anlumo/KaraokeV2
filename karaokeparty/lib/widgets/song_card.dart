@@ -10,7 +10,7 @@ import 'package:karaokeparty/main.dart';
 import 'package:karaokeparty/model/playlist_entry.dart';
 import 'package:karaokeparty/model/song.dart';
 import 'package:karaokeparty/widgets/audio_player.dart';
-import 'package:karaokeparty/widgets/lyrics.dart';
+import 'package:karaokeparty/widgets/song_details_dialog.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 import 'package:timer_builder/timer_builder.dart';
 
@@ -108,42 +108,32 @@ class SongCard extends StatelessWidget {
                 right: coverImage.left.margin(8),
                 bottom: parent.bottom.margin(8),
               ),
-              ((song.coverPath == null)
-                      ? const PlaceholderCover()
-                      : Tooltip(
-                          message: context.t.core.coverAction,
-                          child: InkWell(
-                              onTap: () => showDialog(
-                                    context: context,
-                                    builder: (context) => Dialog(
-                                      child: coverImageWidget(),
-                                    ),
-                                  ),
-                              child: coverImageWidget()),
-                        ))
-                  .applyConstraint(
+              Tooltip(
+                message: context.t.core.showSongDetailsButton,
+                child: InkWell(onTap: () => showSongDetailsDialog(context, song), child: coverImageWidget()),
+              ).applyConstraint(
                 id: coverImage,
                 width: 80,
                 height: 80,
                 centerRightTo: parent.rightMargin(8),
               ),
-              if (song.lyrics != null)
-                Tooltip(
-                  message: context.t.core.showLyricsButton,
-                  child: IconButton(
-                      onPressed: () {
-                        showLyricsDialog(context, song);
-                      },
-                      icon: const Icon(Icons.lyrics)),
-                ).applyConstraint(right: playAudio.left, top: parent.top.margin(4)),
-              Tooltip(
-                message: context.t.core.playAudioButton,
-                child: IconButton(
-                    onPressed: () {
-                      showAudioPlayer(context, song);
-                    },
-                    icon: const Icon(Icons.music_note)),
-              ).applyConstraint(id: playAudio, right: coverImage.left.margin(8), top: parent.top.margin(4)),
+              // if (song.lyrics != null)
+              //   Tooltip(
+              //     message: context.t.core.showLyricsButton,
+              //     child: IconButton(
+              //         onPressed: () {
+              //           showLyricsDialog(context, song);
+              //         },
+              //         icon: const Icon(Icons.lyrics)),
+              //   ).applyConstraint(right: playAudio.left, top: parent.top.margin(4)),
+              // Tooltip(
+              //   message: context.t.core.playAudioButton,
+              //   child: IconButton(
+              //       onPressed: () {
+              //         showAudioPlayer(context, song);
+              //       },
+              //       icon: const Icon(Icons.music_note)),
+              // ).applyConstraint(id: playAudio, right: coverImage.left.margin(8), top: parent.top.margin(4)),
               if (song.duet)
                 Tooltip(
                   message: context.t.core.twoPlayerSongTooltip,
