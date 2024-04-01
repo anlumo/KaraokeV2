@@ -3,32 +3,59 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 part 'search_filter_state.dart';
 
 class SearchFilterCubit extends Cubit<SearchFilterState> {
-  SearchFilterCubit() : super(const SearchFilterState(language: null, decade: null, duet: null));
+  SearchFilterCubit() : super(const SearchFilterState(languages: {}, decade: null, duet: null));
 
-  String? get language => state.language;
+  Set<String> get languages => state.languages;
   String? get decade => state.decade;
   bool? get duet => state.duet;
 
-  set language(String? language) {
-    emit(SearchFilterState(language: language, decade: decade, duet: duet));
+  set languages(Iterable<String> languages) {
+    emit(SearchFilterState(languages: Set.from(languages), decade: decade, duet: duet));
+  }
+
+  void addLanguage(String language) {
+    emit(SearchFilterState(
+      languages: {
+        ...languages,
+        language,
+      },
+      decade: decade,
+      duet: duet,
+    ));
+  }
+
+  void removeLanguage(String language) {
+    emit(SearchFilterState(
+      languages: languages.where((element) => element != language).toSet(),
+      decade: decade,
+      duet: duet,
+    ));
+  }
+
+  void toggleLanguage(String language) {
+    if (languages.contains(language)) {
+      removeLanguage(language);
+    } else {
+      addLanguage(language);
+    }
   }
 
   set decade(String? decade) {
-    emit(SearchFilterState(language: language, decade: decade, duet: duet));
+    emit(SearchFilterState(languages: languages, decade: decade, duet: duet));
   }
 
   set duet(bool? duet) {
-    emit(SearchFilterState(language: language, decade: decade, duet: duet));
+    emit(SearchFilterState(languages: languages, decade: decade, duet: duet));
   }
 
   String? queryString(String? text) {
-    if (text == null && state.language == null && state.decade == null && state.duet == null) {
+    if (text == null && state.languages.isEmpty && state.decade == null && state.duet == null) {
       return null;
     }
 
     return [
       if (text != null) text,
-      if (state.language != null) 'language:"${state.language!}"',
+      if (state.languages.isNotEmpty) '(${state.languages.map((lang) => 'language:"$lang"').join(' OR ')})',
       if (state.decade != null) 'year:[${state.decade!}]',
       if (state.duet != null) 'duet:${state.duet}',
     ].join(' AND ');

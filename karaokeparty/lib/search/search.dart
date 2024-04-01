@@ -169,22 +169,20 @@ class _SearchState extends State<Search> {
                             child: MenuAnchor(
                                 menuChildren: widget.api.connectionCubit.state is WebSocketConnectedState
                                     ? [
-                                        RadioMenuButton(
-                                            value: null,
-                                            groupValue: searchFilter.language,
+                                        CheckboxMenuButton(
+                                            value: searchFilter.languages.isEmpty,
                                             onChanged: (_) {
-                                              context.read<SearchFilterCubit>().language = null;
+                                              context.read<SearchFilterCubit>().languages = {};
                                               _updateSearch(context);
                                             },
                                             child: Text(context.t.search.searchFilterAllLanguages)),
                                         const Divider(),
                                         ...(widget.api.connectionCubit.state as WebSocketConnectedState)
                                             .languages
-                                            .map((language) => RadioMenuButton(
-                                                value: language,
-                                                groupValue: searchFilter.language,
+                                            .map((language) => CheckboxMenuButton(
+                                                value: searchFilter.languages.contains(language),
                                                 onChanged: (_) {
-                                                  context.read<SearchFilterCubit>().language = language;
+                                                  context.read<SearchFilterCubit>().toggleLanguage(language);
                                                   _updateSearch(context);
                                                 },
                                                 child: Text(language)))
@@ -198,7 +196,7 @@ class _SearchState extends State<Search> {
                                         controller.open();
                                       }
                                     },
-                                    isSelected: searchFilter.language != null,
+                                    isSelected: searchFilter.languages.isNotEmpty,
                                     icon: const Icon(Icons.language))),
                           ),
                           Tooltip(
