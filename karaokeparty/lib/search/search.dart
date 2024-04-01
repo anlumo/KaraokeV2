@@ -167,37 +167,44 @@ class _SearchState extends State<Search> {
                           Tooltip(
                             message: context.t.search.searchFilterLanguagesTooltip,
                             child: MenuAnchor(
-                                menuChildren: widget.api.connectionCubit.state is WebSocketConnectedState
-                                    ? [
-                                        CheckboxMenuButton(
-                                            value: searchFilter.languages.isEmpty,
-                                            onChanged: (_) {
-                                              context.read<SearchFilterCubit>().languages = {};
-                                              _updateSearch(context);
-                                            },
-                                            child: Text(context.t.search.searchFilterAllLanguages)),
-                                        const Divider(),
-                                        ...(widget.api.connectionCubit.state as WebSocketConnectedState)
-                                            .languages
-                                            .map((language) => CheckboxMenuButton(
-                                                value: searchFilter.languages.contains(language),
-                                                onChanged: (_) {
-                                                  context.read<SearchFilterCubit>().toggleLanguage(language);
-                                                  _updateSearch(context);
-                                                },
-                                                child: Text(language)))
-                                      ]
-                                    : const [],
-                                builder: (context, controller, child) => IconButton(
-                                    onPressed: () {
-                                      if (controller.isOpen) {
-                                        controller.close();
-                                      } else {
-                                        controller.open();
-                                      }
-                                    },
-                                    isSelected: searchFilter.languages.isNotEmpty,
-                                    icon: const Icon(Icons.language))),
+                              menuChildren: widget.api.connectionCubit.state is WebSocketConnectedState
+                                  ? [
+                                      CheckboxMenuButton(
+                                          value: searchFilter.languages.isEmpty,
+                                          onChanged: (_) {
+                                            context.read<SearchFilterCubit>().languages = {};
+                                            _updateSearch(context);
+                                          },
+                                          child: Text(context.t.search.searchFilterAllLanguages)),
+                                      const Divider(),
+                                      ...(widget.api.connectionCubit.state as WebSocketConnectedState)
+                                          .languages
+                                          .map((language) => CheckboxMenuButton(
+                                              value: searchFilter.languages.contains(language),
+                                              onChanged: (_) {
+                                                context.read<SearchFilterCubit>().toggleLanguage(language);
+                                                _updateSearch(context);
+                                              },
+                                              child: Text(language)))
+                                    ]
+                                  : const [],
+                              builder: (context, controller, child) => IconButton(
+                                onPressed: () {
+                                  if (controller.isOpen) {
+                                    controller.close();
+                                  } else {
+                                    controller.open();
+                                  }
+                                },
+                                isSelected: searchFilter.languages.isNotEmpty,
+                                icon: searchFilter.languages.isEmpty
+                                    ? const Icon(Icons.language)
+                                    : Badge(
+                                        label: Text(searchFilter.languages.length.toString()),
+                                        child: const Icon(Icons.language),
+                                      ),
+                              ),
+                            ),
                           ),
                           Tooltip(
                             message: context.t.search.searchFilterDecadesTooltip,
