@@ -1,9 +1,11 @@
+use rand::Rng;
 use serde::Serialize;
 use tantivy::{
     collector::{Collector, TopDocs},
     query::{AllQuery, Query, QueryParser},
     schema::{Field, Schema, FAST, INDEXED, STORED, STRING, TEXT},
-    DocAddress, Document, Index, IndexReader, IndexSettings, IndexSortByField,
+    DocAddress, DocId, Document, Index, IndexReader, IndexSettings, IndexSortByField,
+    SegmentReader,
 };
 
 use crate::Pagination;
@@ -226,18 +228,19 @@ impl SearchIndex {
         )
     }
 
-    pub fn single_from_offsets(
+    pub fn random_picks(
         &self,
-        offsets: impl IntoIterator<Item = u32>,
+        count: usize,
+        query: Option<&str>,
     ) -> tantivy::Result<Vec<serde_json::Value>> {
-        offsets
-            .into_iter()
-            .map(|offset| {
-                self.search_and_convert(&AllQuery, TopDocs::with_limit(1).and_offset(offset as _))
-                    .map(|mut vec| vec.pop())
-            })
-            .filter_map(|result| result.transpose())
-            .collect()
+        let collector = TopDocs::with_limit(count)
+            .custom_score(|_: &SegmentReader| |_: DocId| rand::thread_rng().gen::<u32>());
+
+        if let Some(query) = query {
+            self.search_and_convert(&self.query_parser.parse_query(query)?, collector)
+        } else {
+            self.search_and_convert(&AllQuery, collector)
+        }
     }
 }
 

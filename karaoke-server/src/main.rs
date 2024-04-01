@@ -14,7 +14,6 @@ use axum::{
 };
 use clap::Parser;
 use now_playing::Playlist;
-use rand::Rng;
 use rusqlite::{Connection, OpenFlags};
 use serde::Deserialize;
 use tower_http::{
@@ -213,18 +212,16 @@ async fn get_song_count(State(state): State<Arc<AppState>>) -> String {
 #[derive(Debug, Deserialize)]
 struct SongCount {
     count: u32,
+    query: Option<String>,
 }
 
 async fn get_random_songs(
     State(state): State<Arc<AppState>>,
-    Query(SongCount { count }): Query<SongCount>,
+    Query(SongCount { count, query }): Query<SongCount>,
 ) -> Result<Json<Vec<serde_json::Value>>, StatusCode> {
-    let total = state.song_count as u32;
-    let mut rng = rand::thread_rng();
-
     let result = state
         .index
-        .single_from_offsets((0..count).map(|_| rng.gen_range(0..total)))
+        .random_picks(count as _, query.as_deref())
         .map_err(|err| {
             log::error!("Fetching all failed: {err:?}");
             StatusCode::INTERNAL_SERVER_ERROR
