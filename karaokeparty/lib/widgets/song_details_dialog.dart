@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:karaokeparty/api/api.dart';
 import 'package:karaokeparty/model/song.dart';
-import 'package:karaokeparty/widgets/audio_player.dart';
+import 'package:karaokeparty/widgets/song_player.dart';
 import 'package:karaokeparty/widgets/song_card.dart';
 
 class SongDetailsDialog extends StatelessWidget {

@@ -52,7 +52,6 @@ class _SongPlayerState extends State<SongPlayer> {
           }
         },
       );
-      player.resume();
     });
   }
 
@@ -94,6 +93,7 @@ class _SongPlayerState extends State<SongPlayer> {
           ],
         ),
         Wrap(
+          crossAxisAlignment: WrapCrossAlignment.center,
           children: [
             Tooltip(
               message: context.t.audioplayer.mediaButtonRewind,
@@ -120,7 +120,7 @@ class _SongPlayerState extends State<SongPlayer> {
                       onPressed: () {
                         player.pause();
                       },
-                      icon: const Icon(Icons.pause),
+                      icon: const Icon(Icons.pause, size: 42),
                     ),
                   )
                 : Tooltip(
@@ -129,7 +129,7 @@ class _SongPlayerState extends State<SongPlayer> {
                       onPressed: () {
                         player.resume();
                       },
-                      icon: const Icon(Icons.play_arrow),
+                      icon: const Icon(Icons.play_arrow, size: 42),
                     ),
                   ),
             Tooltip(
