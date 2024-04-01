@@ -139,6 +139,7 @@ class _PlaylistState extends State<Playlist> {
             ),
           WebSocketConnectedState(:final isAdmin) => BlocConsumer<PlaylistCubit, PlaylistState>(
               listener: (context, state) {
+                log.d('Received list update: $state');
                 _songQueue = List.from(state.playHistory.followedBy(state.songQueue));
                 _songQueueNowPlaying = state.playHistory.length - 1;
                 if (_songQueue!.isNotEmpty && _selectedItem > _songQueue!.length - 1) {
@@ -149,11 +150,13 @@ class _PlaylistState extends State<Playlist> {
               },
               builder: (context, state) {
                 _songQueue ??= List.from(state.playHistory.followedBy(state.songQueue));
+                _songQueueNowPlaying ??= state.playHistory.length - 1;
                 if (_songQueue?.isEmpty ?? true) {
                   return Center(
                     child: EmptyState(api: widget.api, explanation: context.t.playlist.emptyState),
                   );
                 }
+                log.d('_songQueueNowPlaying = $_songQueueNowPlaying');
                 if (isAdmin) {
                   return SlidableAutoCloseBehavior(
                     child: Focus(
