@@ -1,5 +1,3 @@
-import 'package:animated_list_plus/animated_list_plus.dart';
-import 'package:animated_list_plus/transitions.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -11,9 +9,9 @@ import 'package:karaokeparty/api/song_cache.dart';
 import 'package:karaokeparty/i18n/strings.g.dart';
 import 'package:karaokeparty/main.dart';
 import 'package:karaokeparty/model/playlist_entry.dart';
-import 'package:karaokeparty/now_playing/now_playing.dart';
+import 'package:karaokeparty/playlist/admin_list.dart';
+import 'package:karaokeparty/playlist/user_list.dart';
 import 'package:karaokeparty/search/empty_state.dart';
-import 'package:karaokeparty/widgets/song_card.dart';
 
 class Playlist extends StatefulWidget {
   const Playlist({required this.songCache, required this.api, super.key});
@@ -163,147 +161,29 @@ class _PlaylistState extends State<Playlist> {
                       focusNode: _listFocusNode,
                       onKeyEvent: itemOnKey,
                       autofocus: true,
-                      child: ImplicitlyAnimatedReorderableList<PlaylistEntry>(
-                        items: _songQueue!,
-                        itemBuilder: (context, itemAnimation, item, i) {
-                          return Reorderable(
-                            key: ValueKey(item.id),
-                            builder: (context, dragAnimation, inDrag) {
-                              return AnimatedBuilder(
-                                  animation: dragAnimation,
-                                  builder: (context, child) {
-                                    log.d('render item $i singer ${item.singer}');
-
-                                    if (i == _songQueueNowPlaying) {
-                                      return NowPlaying(songCache: widget.songCache, api: widget.api, entry: item);
-                                    }
-                                    if (_songQueueNowPlaying != null && i < _songQueueNowPlaying!) {
-                                      return PlaylistSongCard(
-                                        songCache: widget.songCache,
-                                        entry: item,
-                                        api: widget.api,
-                                        selected: _selectedItem == i,
-                                        predictedPlayTime: null,
-                                      );
-                                    }
-
-                                    final listItem = Row(
-                                      children: [
-                                        Tooltip(
-                                          message: context.t.playlist.playTooltip,
-                                          child: IconButton(
-                                              onPressed: () {
-                                                connectionState.play(item.id);
-                                              },
-                                              icon: const Icon(Icons.play_arrow)),
-                                        ),
-                                        Expanded(
-                                          child: GestureDetector(
-                                            onTap: () {
-                                              setState(() {
-                                                _selectedItem = i;
-                                              });
-                                            },
-                                            child: PlaylistSongCard(
-                                              songCache: widget.songCache,
-                                              entry: item,
-                                              api: widget.api,
-                                              selected: _selectedItem == i,
-                                              predictedPlayTime:
-                                                  (i > 0 && (_songQueueNowPlaying == null || i > _songQueueNowPlaying!))
-                                                      ? _songQueue![i - 1].predictedEnd
-                                                      : null,
-                                            ),
-                                          ),
-                                        ),
-                                        SizeFadeTransition(
-                                          animation: itemAnimation,
-                                          child: Handle(
-                                            delay: const Duration(milliseconds: 600),
-                                            child: MouseRegion(
-                                              cursor: inDrag ? SystemMouseCursors.grabbing : SystemMouseCursors.grab,
-                                              child: const SizedBox(
-                                                height: 80,
-                                                child: Padding(
-                                                  padding: EdgeInsets.symmetric(horizontal: 8),
-                                                  child: Icon(Icons.menu),
-                                                ),
-                                              ),
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    );
-
-                                    return SizeFadeTransition(
-                                      animation: itemAnimation,
-                                      sizeFraction: 0.7,
-                                      curve: Curves.easeInOut,
-                                      child: Slidable(
-                                        key: ValueKey(item.id),
-                                        groupTag: '0',
-                                        endActionPane: ActionPane(
-                                            motion: const ScrollMotion(),
-                                            dragDismissible: false,
-                                            // dismissible: DismissiblePane(onDismissed: () {
-                                            //   setState(() {});
-                                            // }),
-                                            children: [
-                                              SlidableAction(
-                                                flex: 2,
-                                                autoClose: true,
-                                                backgroundColor: theme.colorScheme.error,
-                                                foregroundColor: theme.colorScheme.onError,
-                                                icon: Icons.delete,
-                                                label: context.t.playlist.deleteLabel,
-                                                onPressed: (context) {
-                                                  connectionState.remove(item.id);
-                                                  _songQueue!.removeWhere((element) => element.id == item.id);
-                                                },
-                                              ),
-                                            ]),
-                                        child: inDrag
-                                            ? ColoredBox(
-                                                color: theme.colorScheme.secondary.withOpacity(0.5), child: listItem)
-                                            : listItem,
-                                      ),
-                                    );
-                                  });
-                            },
-                          );
-                        },
-                        areItemsTheSame: (a, b) => a.id == b.id,
-                        onReorderFinished: (item, from, to, newItems) {
-                          if (to > 0) {
-                            connectionState.moveAfter(item.id, after: newItems[to - 1].id);
-                          } else {
-                            connectionState.moveTop(item.id);
-                          }
-                          _songQueue = newItems;
-                        },
-                      ),
+                      child: AdminList(
+                          api: widget.api,
+                          songCache: widget.songCache,
+                          songQueue: _songQueue!,
+                          songQueueNowPlaying: _songQueueNowPlaying,
+                          selectedItem: _selectedItem,
+                          onSelectItem: (index) => setState(() {
+                                _selectedItem = index;
+                              }),
+                          onUpdateQueue: (queue) => setState(() {
+                                _songQueue = queue;
+                              })),
                     ),
                   );
-                } else {
-                  return ImplicitlyAnimatedList<PlaylistEntry>(
-                    primary: true,
-                    items: _songQueue!,
-                    itemBuilder: (context, itemAnimation, item, i) {
-                      if (i == _songQueueNowPlaying) {
-                        return NowPlaying(songCache: widget.songCache, api: widget.api, entry: item);
-                      }
-                      log.d('render item $i singer ${item.singer}');
-                      return PlaylistSongCard(
-                        songCache: widget.songCache,
-                        entry: item,
-                        api: widget.api,
-                        predictedPlayTime: (i > 0 && (_songQueueNowPlaying == null || i > _songQueueNowPlaying!))
-                            ? _songQueue![i - 1].predictedEnd
-                            : null,
-                      );
-                    },
-                    areItemsTheSame: (a, b) => a.id == b.id,
+                } else if (_songQueue != null) {
+                  return UserList(
+                    api: widget.api,
+                    songCache: widget.songCache,
+                    songQueue: _songQueue!,
+                    songQueueNowPlaying: _songQueueNowPlaying,
                   );
+                } else {
+                  return const SizedBox();
                 }
               },
             ),
