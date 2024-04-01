@@ -1,8 +1,8 @@
-import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:hydrated_bloc/hydrated_bloc.dart';
 
 part 'search_filter_state.dart';
 
-class SearchFilterCubit extends Cubit<SearchFilterState> {
+class SearchFilterCubit extends HydratedCubit<SearchFilterState> {
   SearchFilterCubit() : super(const SearchFilterState(languages: {}, decade: null, duet: null));
 
   Set<String> get languages => state.languages;
@@ -60,4 +60,18 @@ class SearchFilterCubit extends Cubit<SearchFilterState> {
       if (state.duet != null) 'duet:${state.duet}',
     ].join(' AND ');
   }
+
+  @override
+  SearchFilterState fromJson(Map<String, dynamic> json) => SearchFilterState(
+        languages: Set.from(json['languages']),
+        decade: json['decade'],
+        duet: json['duet'],
+      );
+
+  @override
+  Map<String, dynamic> toJson(SearchFilterState state) => {
+        'languages': state.languages.toList(growable: false),
+        'decade': state.decade,
+        'duet': state.duet,
+      };
 }

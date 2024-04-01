@@ -1,6 +1,8 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:hydrated_bloc/hydrated_bloc.dart';
 import 'package:karaokeparty/api/api.dart';
 import 'package:karaokeparty/api/cubit/connection_cubit.dart';
 import 'package:karaokeparty/api/song_cache.dart';
@@ -12,6 +14,7 @@ import 'package:karaokeparty/playlist/playlist.dart';
 import 'package:karaokeparty/search/cubit/search_filter_cubit.dart';
 import 'package:karaokeparty/search/search.dart';
 import 'package:logger/logger.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 final log = Logger(
@@ -27,8 +30,13 @@ final log = Logger(
 
 const double wideLayoutSidebarWidth = 450;
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
   log.d('Starting application');
+  HydratedBloc.storage = await HydratedStorage.build(
+    storageDirectory: kIsWeb ? HydratedStorage.webStorageDirectory : await getApplicationDocumentsDirectory(),
+  );
+
   runApp(TranslationProvider(
       child: FutureBuilder(
           future: SharedPreferences.getInstance(),
