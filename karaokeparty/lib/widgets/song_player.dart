@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math';
 
 import 'package:audioplayers/audioplayers.dart';
@@ -7,19 +8,20 @@ import 'package:karaokeparty/i18n/strings.g.dart';
 import 'package:karaokeparty/model/song.dart';
 
 class SongPlayer extends StatefulWidget {
-  const SongPlayer({required this.song, super.key});
+  const SongPlayer({required this.song, required this.player, super.key});
 
   final Song song;
+  final AudioPlayer player;
 
   @override
   State<SongPlayer> createState() => _SongPlayerState();
 }
 
 class _SongPlayerState extends State<SongPlayer> {
-  final player = AudioPlayer();
   var duration = Duration.zero;
   var position = Duration.zero;
   var playerState = PlayerState.stopped;
+  final _subscriptions = <StreamSubscription>[];
 
   var disposed = false;
 
@@ -27,23 +29,24 @@ class _SongPlayerState extends State<SongPlayer> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      final player = widget.player;
       player.setSourceUrl('${serverHost.media}/${widget.song.audioPath}');
-      player.onDurationChanged.listen((newDuration) {
+      _subscriptions.add(player.onDurationChanged.listen((newDuration) {
         if (!disposed) {
           setState(() {
             duration = newDuration;
           });
         }
-      });
-      player.onPositionChanged.listen((newPosition) {
+      }));
+      _subscriptions.add(player.onPositionChanged.listen((newPosition) {
         if (!disposed) {
           setState(() {
             position = newPosition;
           });
         }
-      });
-      player.onPlayerComplete.listen((_) => Navigator.of(context).pop());
-      player.onPlayerStateChanged.listen(
+      }));
+      _subscriptions.add(player.onPlayerComplete.listen((_) => Navigator.of(context).pop()));
+      _subscriptions.add(player.onPlayerStateChanged.listen(
         (event) {
           if (!disposed) {
             setState(() {
@@ -51,14 +54,16 @@ class _SongPlayerState extends State<SongPlayer> {
             });
           }
         },
-      );
+      ));
     });
   }
 
   @override
   void dispose() {
     disposed = true;
-    player.dispose();
+    for (final subscription in _subscriptions) {
+      subscription.cancel();
+    }
     super.dispose();
   }
 
@@ -85,7 +90,7 @@ class _SongPlayerState extends State<SongPlayer> {
                 max: max(duration.inMilliseconds, position.inMilliseconds).toDouble(),
                 value: position.inMilliseconds.toDouble(),
                 onChanged: (value) {
-                  player.seek(Duration(milliseconds: value.round()));
+                  widget.player.seek(Duration(milliseconds: value.round()));
                 },
               ),
             ),
@@ -99,7 +104,7 @@ class _SongPlayerState extends State<SongPlayer> {
               message: context.t.audioplayer.mediaButtonRewind,
               child: IconButton(
                 onPressed: () {
-                  player.seek(Duration.zero);
+                  widget.player.seek(Duration.zero);
                 },
                 icon: const Icon(Icons.fast_rewind),
               ),
@@ -108,7 +113,7 @@ class _SongPlayerState extends State<SongPlayer> {
               message: context.t.audioplayer.mediaButtonRewind10Seconds,
               child: IconButton(
                 onPressed: () {
-                  player.seek(position - const Duration(seconds: 10));
+                  widget.player.seek(position - const Duration(seconds: 10));
                 },
                 icon: const Icon(Icons.replay_10),
               ),
@@ -118,7 +123,7 @@ class _SongPlayerState extends State<SongPlayer> {
                     message: context.t.audioplayer.mediaButtonPause,
                     child: IconButton(
                       onPressed: () {
-                        player.pause();
+                        widget.player.pause();
                       },
                       icon: const Icon(Icons.pause, size: 42),
                     ),
@@ -127,7 +132,7 @@ class _SongPlayerState extends State<SongPlayer> {
                     message: context.t.audioplayer.mediaButtonPlay,
                     child: IconButton(
                       onPressed: () {
-                        player.resume();
+                        widget.player.resume();
                       },
                       icon: const Icon(Icons.play_arrow, size: 42),
                     ),
@@ -136,7 +141,7 @@ class _SongPlayerState extends State<SongPlayer> {
               message: context.t.audioplayer.mediaButtonSkip10Seconds,
               child: IconButton(
                 onPressed: () {
-                  player.seek(position + const Duration(seconds: 10));
+                  widget.player.seek(position + const Duration(seconds: 10));
                 },
                 icon: const Icon(Icons.forward_10),
               ),
