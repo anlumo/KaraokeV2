@@ -5,6 +5,7 @@
 /playlist.json
 /song_log.csv
 /suggestions.csv
+/bugs.csv
 
 # Miscellaneous
 *.class

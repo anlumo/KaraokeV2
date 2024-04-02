@@ -6,5 +6,11 @@
     "deleteLabel": "Delete",
     "emptyState": "Nobody has requested a song yet. Now is the best time to request one yourself!",
     "predictedPlayTimeInMinutes": "in $min min",
-    "predictedPlayTimeInThePast": "now"
+    "predictedPlayTimeInThePast": "now",
+    "bugReport": {
+        "title": "Bug report for $title",
+        "textFieldLabel": "Report",
+        "submitButton": "Submit",
+        "cancelButton": "Cancel"
+    }
 }

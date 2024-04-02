@@ -5,6 +5,7 @@ paths:
   playlist: playlist.json
   song_log: song_log.csv
   suggestion_log: suggestions.csv
+  bug_log: bugs.csv
 
 server:
   listen: "[::1]:8080"

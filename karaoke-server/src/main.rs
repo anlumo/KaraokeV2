@@ -121,6 +121,7 @@ async fn main() -> anyhow::Result<()> {
         config.paths.playlist,
         song_db.iter().map(|song| song.row_id),
         config.paths.song_log.as_deref(),
+        &config.paths.bug_log,
     )
     .await?;
 

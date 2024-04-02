@@ -65,6 +65,14 @@ final class WebSocketConnectedState extends WebSocketConnectionState {
       'id': id.uuid,
     }));
   }
+
+  void reportBug(int songId, String report) {
+    sink.add(jsonEncode({
+      'cmd': 'reportBug',
+      'song': songId,
+      'report': report,
+    }));
+  }
 }
 
 final class WebSocketConnectionFailedState extends WebSocketConnectionState {

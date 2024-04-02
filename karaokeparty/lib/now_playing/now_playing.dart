@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:karaokeparty/api/api.dart';
+import 'package:karaokeparty/api/cubit/connection_cubit.dart';
 import 'package:karaokeparty/api/song_cache.dart';
 import 'package:karaokeparty/i18n/strings.g.dart';
 import 'package:karaokeparty/model/playlist_entry.dart';
+import 'package:karaokeparty/now_playing/bug_report.dart';
 import 'package:karaokeparty/widgets/song_card.dart';
 
 class NowPlaying extends StatelessWidget {
@@ -22,9 +25,36 @@ class NowPlaying extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text(
-            context.t.playlist.nowPlayingTitle,
-            style: theme.textTheme.labelLarge!.copyWith(color: theme.colorScheme.onSecondary),
+          BlocBuilder<ConnectionCubit, WebSocketConnectionState>(
+            builder: (context, state) {
+              final titleText = Text(
+                context.t.playlist.nowPlayingTitle,
+                style: theme.textTheme.labelLarge!.copyWith(color: theme.colorScheme.onSecondary),
+              );
+              if (state case WebSocketConnectedState(:final isAdmin)) {
+                if (isAdmin) {
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                    child: Row(children: [
+                      Expanded(
+                        child: titleText,
+                      ),
+                      IconButton(
+                        onPressed: () async {
+                          final maybeSong = await songCache.get(entry.song);
+                          if (maybeSong != null && context.mounted) {
+                            await showBugReportDialog(context, song: maybeSong, api: api);
+                          }
+                        },
+                        hoverColor: theme.colorScheme.onSecondaryContainer,
+                        icon: Icon(Icons.bug_report, color: theme.colorScheme.onSecondary),
+                      ),
+                    ]),
+                  );
+                }
+              }
+              return titleText;
+            },
           ),
           PlaylistSongCard(
             songCache: songCache,

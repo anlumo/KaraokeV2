@@ -45,6 +45,7 @@ pub struct Playlist {
     song_queue: RwLock<InnerPlaylist>,
     persist_path: PathBuf,
     song_log: Option<Mutex<File>>,
+    bug_log: Mutex<File>,
 }
 
 impl Playlist {
@@ -52,6 +53,7 @@ impl Playlist {
         path: impl AsRef<Path>,
         valid_songs: impl IntoIterator<Item = i64>,
         song_log: Option<impl AsRef<Path>>,
+        bug_log: impl AsRef<Path>,
     ) -> anyhow::Result<Self> {
         let song_log = if let Some(song_log) = song_log {
             Some(Mutex::new(
@@ -64,6 +66,14 @@ impl Playlist {
         } else {
             None
         };
+
+        let bug_log = Mutex::new(
+            OpenOptions::new()
+                .append(true)
+                .create(true)
+                .open(bug_log)
+                .await?,
+        );
 
         match File::open(&path).await {
             Ok(mut f) => {
@@ -85,6 +95,7 @@ impl Playlist {
                     song_queue: RwLock::new(song_queue),
                     persist_path: path.as_ref().to_owned(),
                     song_log,
+                    bug_log,
                 })
             }
             Err(err) if err.kind() == std::io::ErrorKind::NotFound => Ok(Self {
@@ -92,6 +103,7 @@ impl Playlist {
                 song_queue: Default::default(),
                 persist_path: path.as_ref().to_owned(),
                 song_log,
+                bug_log,
             }),
             Err(err) => Err(err.into()),
         }
@@ -304,6 +316,35 @@ impl Playlist {
         } else {
             Ok(false)
         }
+    }
+
+    pub async fn report_bug(
+        &self,
+        song: i64,
+        report: &str,
+        index: &SearchIndex,
+    ) -> anyhow::Result<()> {
+        if !self.valid_songs.contains(&song) {
+            log::error!("Bug report for song that doesn't exist!");
+            return Ok(());
+        }
+        let songs = index.search_song(&format!("rowid:{song}"), 1)?;
+
+        if songs.is_empty() {
+            log::error!("Can't write bug log: song not found!");
+        } else {
+            let timestamp = OffsetDateTime::now_utc().format(&Rfc3339).unwrap();
+            let mut bug_log = self.bug_log.lock().await;
+            let record =
+                StringRecord::from(vec![&timestamp, &songs[0].artist, &songs[0].title, report]);
+            let mut writer = Writer::from_writer(Vec::new());
+            writer.write_record(&record).unwrap();
+
+            if let Err(err) = bug_log.write_all(&writer.into_inner().unwrap()).await {
+                log::error!("Failed writing bug log: {err:?}");
+            }
+        }
+        Ok(())
     }
 
     async fn did_change(

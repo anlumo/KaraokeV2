@@ -20,6 +20,8 @@ pub struct Paths {
     pub song_log: Option<PathBuf>,
     /// Path to the file that should contain the song suggestions that were made.
     pub suggestion_log: PathBuf,
+    /// Path to the file that should contain the song bug reports that were made.
+    pub bug_log: PathBuf,
 }
 
 #[derive(Deserialize, Debug)]

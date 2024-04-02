@@ -24,6 +24,7 @@ enum Command {
     Swap { id1: Uuid, id2: Uuid },
     MoveAfter { id: Uuid, after: Uuid },
     MoveTop { id: Uuid },
+    ReportBug { song: i64, report: String },
 }
 
 pub async fn ws_handler(
@@ -90,6 +91,9 @@ async fn handle_socket(socket: WebSocket, who: SocketAddr, state: Arc<AppState>)
                                         }
                                         Command::MoveTop { id } if authenticated => {
                                             state.playlist.move_top(id, &state.index).await.map(|_| ())
+                                        }
+                                        Command::ReportBug { song, report } if authenticated => {
+                                            state.playlist.report_bug(song, &report, &state.index).await.map(|_| ())
                                         }
                                         _ => sender.send(Message::Text("Unauthenticated".to_owned())).await.map_err(anyhow::Error::from),
                                     };
