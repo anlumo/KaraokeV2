@@ -10,6 +10,7 @@ import 'package:karaokeparty/model/song.dart';
 import 'package:karaokeparty/search/cubit/search_filter_cubit.dart';
 import 'package:karaokeparty/search/empty_state.dart';
 import 'package:karaokeparty/search/suggest_song.dart';
+import 'package:karaokeparty/widgets/filter_bar.dart';
 import 'package:karaokeparty/widgets/song_card.dart';
 
 class Search extends StatefulWidget {
@@ -139,166 +140,39 @@ class _SearchState extends State<Search> {
                   color: theme.colorScheme.background.withOpacity(0.5),
                   child: Padding(
                     padding: const EdgeInsets.symmetric(vertical: 8.0),
-                    child: BlocBuilder<SearchFilterCubit, SearchFilterState>(
-                      builder: (context, searchFilter) => Row(
-                        children: [
-                          Expanded(
-                            child: SearchBar(
-                              focusNode: _searchBarFocusNode,
-                              controller: _controller,
-                              padding:
-                                  const MaterialStatePropertyAll<EdgeInsets>(EdgeInsets.symmetric(horizontal: 16.0)),
-                              backgroundColor: MaterialStatePropertyAll(theme.colorScheme.surface.withOpacity(0.5)),
-                              hintText: context.t.search.searchHint,
-                              onTap: () {},
-                              onChanged: (_) {},
-                              onSubmitted: (_) {
-                                _updateSearch(context);
-                              },
-                              leading: const Icon(Icons.search),
-                              trailing: [
-                                if (_controller.text.isNotEmpty)
-                                  Tooltip(
-                                    message: context.t.search.clearTextButton,
-                                    child: IconButton(
-                                      onPressed: () {
-                                        _controller.clear();
-                                        setState(() {
-                                          _searchResults = null;
-                                          _searchedText = null;
-                                        });
-                                      },
-                                      icon: const Icon(Icons.clear),
-                                    ),
-                                  ),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(
-                            width: 8,
-                          ),
-                          Tooltip(
-                            message: context.t.search.searchFilterLanguagesTooltip,
-                            child: MenuAnchor(
-                              menuChildren: widget.api.connectionCubit.state is WebSocketConnectedState
-                                  ? [
-                                      CheckboxMenuButton(
-                                          value: searchFilter.languages.isEmpty,
-                                          onChanged: (_) {
-                                            context.read<SearchFilterCubit>().languages = {};
-                                            _updateSearch(context);
-                                          },
-                                          child: Text(context.t.search.searchFilterAllLanguages)),
-                                      const Divider(),
-                                      ...(widget.api.connectionCubit.state as WebSocketConnectedState)
-                                          .languages
-                                          .map((language) => CheckboxMenuButton(
-                                              value: searchFilter.languages.contains(language),
-                                              onChanged: (_) {
-                                                context.read<SearchFilterCubit>().toggleLanguage(language);
-                                                _updateSearch(context);
-                                              },
-                                              child: Text(language)))
-                                    ]
-                                  : const [],
-                              builder: (context, controller, child) => IconButton(
-                                onPressed: () {
-                                  if (controller.isOpen) {
-                                    controller.close();
-                                  } else {
-                                    controller.open();
-                                  }
-                                },
-                                isSelected: searchFilter.languages.isNotEmpty,
-                                icon: searchFilter.languages.isEmpty
-                                    ? const Icon(Icons.language)
-                                    : Badge(
-                                        label: Text(searchFilter.languages.length.toString()),
-                                        child: const Icon(Icons.language),
-                                      ),
-                              ),
-                            ),
-                          ),
-                          Tooltip(
-                            message: context.t.search.searchFilterDecadesTooltip,
-                            child: MenuAnchor(
-                              menuChildren: [
-                                RadioMenuButton(
-                                    value: null,
-                                    groupValue: searchFilter.decade,
-                                    onChanged: (_) {
-                                      context.read<SearchFilterCubit>().decade = null;
-                                      _updateSearch(context);
-                                    },
-                                    child: Text(context.t.search.searchFilterAllYears)),
-                                const Divider(),
-                                ...context.t.search.searchFilterDecades.entries.map(
-                                  (entry) => RadioMenuButton(
-                                    value: entry.key,
-                                    groupValue: searchFilter.decade,
-                                    onChanged: (_) {
-                                      context.read<SearchFilterCubit>().decade = entry.key;
-                                      _updateSearch(context);
-                                    },
-                                    child: Text(entry.value),
-                                  ),
+                    child: BlocListener<SearchFilterCubit, SearchFilterState>(
+                      listener: (context, state) => _updateSearch(context),
+                      child: FilterBar(
+                        api: widget.api,
+                        child: SearchBar(
+                          focusNode: _searchBarFocusNode,
+                          controller: _controller,
+                          padding: const MaterialStatePropertyAll<EdgeInsets>(EdgeInsets.symmetric(horizontal: 16.0)),
+                          backgroundColor: MaterialStatePropertyAll(theme.colorScheme.surface.withOpacity(0.5)),
+                          hintText: context.t.search.searchHint,
+                          onTap: () {},
+                          onChanged: (_) {},
+                          onSubmitted: (_) {
+                            _updateSearch(context);
+                          },
+                          leading: const Icon(Icons.search),
+                          trailing: [
+                            if (_controller.text.isNotEmpty)
+                              Tooltip(
+                                message: context.t.search.clearTextButton,
+                                child: IconButton(
+                                  onPressed: () {
+                                    _controller.clear();
+                                    setState(() {
+                                      _searchResults = null;
+                                      _searchedText = null;
+                                    });
+                                  },
+                                  icon: const Icon(Icons.clear),
                                 ),
-                              ],
-                              builder: (context, controller, child) => IconButton(
-                                  onPressed: () {
-                                    if (controller.isOpen) {
-                                      controller.close();
-                                    } else {
-                                      controller.open();
-                                    }
-                                  },
-                                  isSelected: searchFilter.decade != null,
-                                  icon: const Icon(Icons.calendar_month)),
-                            ),
-                          ),
-                          Tooltip(
-                            message: context.t.search.searchFilterDuetTooltip,
-                            child: MenuAnchor(
-                              menuChildren: [
-                                RadioMenuButton(
-                                    value: null,
-                                    groupValue: searchFilter.duet,
-                                    onChanged: (_) {
-                                      context.read<SearchFilterCubit>().duet = null;
-                                      _updateSearch(context);
-                                    },
-                                    child: Text(context.t.search.duets.dontCare)),
-                                const Divider(),
-                                RadioMenuButton(
-                                    value: true,
-                                    groupValue: searchFilter.duet,
-                                    onChanged: (_) {
-                                      context.read<SearchFilterCubit>().duet = true;
-                                      _updateSearch(context);
-                                    },
-                                    child: Text(context.t.search.duets.onlyDuets)),
-                                RadioMenuButton(
-                                    value: false,
-                                    groupValue: searchFilter.duet,
-                                    onChanged: (_) {
-                                      context.read<SearchFilterCubit>().duet = false;
-                                      _updateSearch(context);
-                                    },
-                                    child: Text(context.t.search.duets.noDuets)),
-                              ],
-                              builder: (context, controller, child) => IconButton(
-                                  onPressed: () {
-                                    if (controller.isOpen) {
-                                      controller.close();
-                                    } else {
-                                      controller.open();
-                                    }
-                                  },
-                                  isSelected: searchFilter.duet != null,
-                                  icon: const Icon(Icons.group)),
-                            ),
-                          ),
-                        ],
+                              ),
+                          ],
+                        ),
                       ),
                     ),
                   ),

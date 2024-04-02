@@ -209,14 +209,15 @@ async fn search(
 pub struct Pagination {
     offset: u32,
     per_page: u32,
+    query: Option<String>,
 }
 
 async fn get_all_songs(
     State(state): State<Arc<AppState>>,
     Query(pagination): Query<Pagination>,
 ) -> Result<Json<Vec<serde_json::Value>>, StatusCode> {
-    let result = state.index.all(pagination).map_err(|err| {
-        log::error!("Fetching all failed: {err:?}");
+    let result = state.index.paginated(pagination).map_err(|err| {
+        log::error!("Fetching paginated failed: {err:?}");
         StatusCode::INTERNAL_SERVER_ERROR
     })?;
     Ok(Json(result))

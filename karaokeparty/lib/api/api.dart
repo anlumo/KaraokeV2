@@ -9,6 +9,7 @@ import 'package:http/http.dart' as http;
 
 import 'package:karaokeparty/api/host_detector.io.dart'
     if (dart.library.html) 'package:karaokeparty/api/host_detector.web.dart';
+import 'package:karaokeparty/search/cubit/search_filter_cubit.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 export 'package:karaokeparty/api/host_detector.io.dart'
@@ -50,8 +51,15 @@ final class ServerApi {
         .toList(growable: false);
   }
 
-  Future<List<Song>?> fetchSongs(int offset, int perPage) async {
-    final response = await client.get(Uri.parse('${serverHost.api}/all_songs?offset=$offset&per_page=$perPage'));
+  Future<List<Song>?> fetchSongs(int offset, int perPage, {SearchFilterCubit? filter}) async {
+    final uri = Uri.parse('${serverHost.api}/all_songs');
+    final query = filter?.queryString(null);
+    final queryParameters = <String, String>{
+      'offset': offset.toString(),
+      'per_page': perPage.toString(),
+      if (query != null) 'query': query,
+    };
+    final response = await client.get(uri.replace(queryParameters: queryParameters));
     if (response.statusCode != 200) {
       throw ServerError(response);
     }

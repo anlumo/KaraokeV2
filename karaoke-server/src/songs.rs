@@ -219,13 +219,15 @@ impl SearchIndex {
         )
     }
 
-    pub fn all(&self, pagination: Pagination) -> tantivy::Result<Vec<serde_json::Value>> {
-        self.search_and_convert::<u64, _>(
-            &AllQuery,
-            TopDocs::with_limit(pagination.per_page.min(100) as _)
-                .and_offset(pagination.offset as _)
-                .order_by_fast_field("order", tantivy::Order::Asc),
-        )
+    pub fn paginated(&self, pagination: Pagination) -> tantivy::Result<Vec<serde_json::Value>> {
+        let collector = TopDocs::with_limit(pagination.per_page.min(100) as _)
+            .and_offset(pagination.offset as _)
+            .order_by_fast_field("order", tantivy::Order::Asc);
+        if let Some(query) = &pagination.query {
+            self.search_and_convert::<u64, _>(&self.query_parser.parse_query(query)?, collector)
+        } else {
+            self.search_and_convert::<u64, _>(&AllQuery, collector)
+        }
     }
 
     pub fn random_picks(

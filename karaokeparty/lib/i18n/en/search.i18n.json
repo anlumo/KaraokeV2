@@ -41,5 +41,6 @@
         "title": "Song title",
         "submitButtonTitle": "Submit",
         "submissionDone": "Thank you for your suggestion!"
-    }
+    },
+    "browseTitle": "Browse"
 }

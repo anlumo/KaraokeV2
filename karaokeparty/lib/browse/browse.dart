@@ -1,7 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:infinite_scroll_pagination/infinite_scroll_pagination.dart';
 import 'package:karaokeparty/api/api.dart';
+import 'package:karaokeparty/api/cubit/connection_cubit.dart';
+import 'package:karaokeparty/i18n/strings.g.dart';
+import 'package:karaokeparty/main.dart';
 import 'package:karaokeparty/model/song.dart';
+import 'package:karaokeparty/search/cubit/search_filter_cubit.dart';
+import 'package:karaokeparty/widgets/filter_bar.dart';
 import 'package:karaokeparty/widgets/song_card.dart';
 
 const _pageSize = 20;
@@ -33,11 +39,12 @@ class _BrowseState extends State<Browse> {
   }
 
   Future<void> _fetchPage(int pageKey) async {
+    final searchFilter = context.read<SearchFilterCubit>();
     try {
-      final newSongs = await widget.api.fetchSongs(pageKey, _pageSize);
-      final songCount = widget.api.songCount;
-      if (newSongs != null && songCount != null) {
-        final isLastPage = pageKey + _pageSize >= songCount;
+      final newSongs = await widget.api.fetchSongs(pageKey, _pageSize, filter: searchFilter);
+      if (newSongs != null) {
+        final isLastPage = newSongs.length < _pageSize;
+        log.d('isLastPage = $isLastPage');
         if (isLastPage) {
           _pagingController.appendLastPage(newSongs);
         } else {
@@ -52,10 +59,38 @@ class _BrowseState extends State<Browse> {
 
   @override
   Widget build(BuildContext context) {
-    return PagedListView(
-        pagingController: _pagingController,
-        builderDelegate: PagedChildBuilderDelegate<Song>(
-          itemBuilder: (context, item, index) => SongCard(song: item, api: widget.api),
-        ));
+    final theme = Theme.of(context);
+
+    return CustomScrollView(
+      slivers: [
+        SliverToBoxAdapter(
+          child: Card(
+            color: theme.colorScheme.secondaryContainer,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8.0),
+              child: FilterBar(
+                api: widget.api,
+                child: Text(
+                  context.t.search.browseTitle,
+                  style: theme.textTheme.labelLarge?.copyWith(color: theme.colorScheme.onSecondaryContainer),
+                ),
+              ),
+            ),
+          ),
+        ),
+        BlocListener<SearchFilterCubit, SearchFilterState>(
+          listener: (context, state) {
+            _pagingController.refresh();
+            _pagingController.value = const PagingState();
+          },
+          child: PagedSliverList<int, Song>(
+            pagingController: _pagingController,
+            builderDelegate: PagedChildBuilderDelegate<Song>(
+              itemBuilder: (context, item, index) => SongCard(song: item, api: widget.api),
+            ),
+          ),
+        ),
+      ],
+    );
   }
 }
