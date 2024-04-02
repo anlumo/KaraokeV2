@@ -44,7 +44,6 @@ class _BrowseState extends State<Browse> {
       final newSongs = await widget.api.fetchSongs(pageKey, _pageSize, filter: searchFilter);
       if (newSongs != null) {
         final isLastPage = newSongs.length < _pageSize;
-        log.d('isLastPage = $isLastPage');
         if (isLastPage) {
           _pagingController.appendLastPage(newSongs);
         } else {
