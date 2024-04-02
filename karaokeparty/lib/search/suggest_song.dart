@@ -15,8 +15,9 @@ class SuggestSong extends StatefulWidget {
 }
 
 class _SuggestSongState extends State<SuggestSong> {
-  final _explanationController = TextEditingController();
   final _nameController = TextEditingController();
+  final _artistController = TextEditingController();
+  final _titleController = TextEditingController();
   final _submitButtonController = RoundedLoadingButtonController();
   var _loading = false;
   var _submitted = false;
@@ -24,7 +25,9 @@ class _SuggestSongState extends State<SuggestSong> {
   @override
   void initState() {
     super.initState();
-    _explanationController.text = widget.failedSearch;
+    _titleController.text = widget.failedSearch;
+    _artistController.addListener(() => setState(() {}));
+    _titleController.addListener(() => setState(() {}));
   }
 
   @override
@@ -32,7 +35,8 @@ class _SuggestSongState extends State<SuggestSong> {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.failedSearch != widget.failedSearch) {
       _submitButtonController.reset();
-      _explanationController.text = widget.failedSearch;
+      _titleController.text = widget.failedSearch;
+      _artistController.clear();
       _submitted = false;
       _loading = false;
     }
@@ -40,8 +44,9 @@ class _SuggestSongState extends State<SuggestSong> {
 
   @override
   void dispose() {
-    _explanationController.dispose();
     _nameController.dispose();
+    _artistController.dispose();
+    _titleController.dispose();
     super.dispose();
   }
 
@@ -52,7 +57,8 @@ class _SuggestSongState extends State<SuggestSong> {
     try {
       await widget.api.suggestSong(
         name: _nameController.text,
-        suggestion: _explanationController.text,
+        title: _titleController.text,
+        artist: _artistController.text,
       );
       _submitButtonController.success();
     } catch (e) {
@@ -89,14 +95,21 @@ class _SuggestSongState extends State<SuggestSong> {
                         style: theme.textTheme.labelLarge,
                       ),
                       TextField(
-                        controller: _explanationController,
-                        maxLines: null,
+                        autofocus: true,
+                        decoration: InputDecoration(
+                          labelText: context.t.search.suggestSong.title,
+                        ),
+                        controller: _titleController,
                         enabled: !_loading,
-                        onSubmitted: (_) {
-                          if (!_loading && _explanationController.text.isNotEmpty) {
-                            _submit();
-                          }
-                        },
+                        textInputAction: TextInputAction.next,
+                      ),
+                      TextField(
+                        decoration: InputDecoration(
+                          labelText: context.t.search.suggestSong.artist,
+                        ),
+                        controller: _artistController,
+                        enabled: !_loading,
+                        textInputAction: TextInputAction.next,
                       ),
                       TextField(
                         decoration: InputDecoration(
@@ -104,8 +117,9 @@ class _SuggestSongState extends State<SuggestSong> {
                         ),
                         controller: _nameController,
                         enabled: !_loading,
+                        textInputAction: TextInputAction.send,
                         onSubmitted: (_) {
-                          if (!_loading && _explanationController.text.isNotEmpty) {
+                          if (!_loading && _titleController.text.isNotEmpty && _artistController.text.isNotEmpty) {
                             _submit();
                           }
                         },
@@ -116,7 +130,9 @@ class _SuggestSongState extends State<SuggestSong> {
                         child: RoundedLoadingButton(
                           controller: _submitButtonController,
                           color: theme.colorScheme.primary,
-                          onPressed: !_loading && _explanationController.text.isNotEmpty ? _submit : null,
+                          onPressed: !_loading && _titleController.text.isNotEmpty && _artistController.text.isNotEmpty
+                              ? _submit
+                              : null,
                           child: Padding(
                             padding: const EdgeInsets.symmetric(horizontal: 32),
                             child: Text(

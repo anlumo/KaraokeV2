@@ -97,12 +97,18 @@ final class ServerApi {
     }
   }
 
-  Future<void> suggestSong({required String name, required String suggestion}) async {
+  Future<void> suggestSong({required String name, required String artist, required String title}) async {
     var uri = Uri.parse('${serverHost.api}/suggest');
-    final queryParameters = <String, String>{
+    final suggestion = <String, String>{
       'name': name,
+      'artist': artist,
+      'title': title,
     };
-    final response = await client.post(uri.replace(queryParameters: queryParameters), body: suggestion);
+    final response = await client.post(uri,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode(suggestion));
     if (response.statusCode ~/ 100 != 2) {
       throw ServerError(response);
     }

@@ -254,16 +254,21 @@ async fn get_languages(State(state): State<Arc<AppState>>) -> Json<Vec<String>> 
 #[derive(Debug, Deserialize)]
 struct Suggest {
     name: String,
+    artist: String,
+    title: String,
 }
 
 async fn suggest(
     State(state): State<Arc<AppState>>,
-    Query(Suggest { name }): Query<Suggest>,
-    suggest_str: String,
+    Json(Suggest {
+        name,
+        artist,
+        title,
+    }): Json<Suggest>,
 ) {
     let mut suggest_log = state.suggest_log.lock().await;
     let timestamp = OffsetDateTime::now_utc().format(&Rfc3339).unwrap();
-    let record = StringRecord::from(vec![&timestamp, &name, &suggest_str]);
+    let record = StringRecord::from(vec![&timestamp, &name, &artist, &title]);
     let mut writer = Writer::from_writer(Vec::new());
     writer.write_record(&record).unwrap();
 

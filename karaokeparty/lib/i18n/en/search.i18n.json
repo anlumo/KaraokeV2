@@ -36,7 +36,9 @@
     "searchHint": "Search",
     "suggestSong": {
         "explanation": "Can't find anything. Looking for a particular song? Please explain:",
-        "yourName": "Your nickname",
+        "yourName": "Your nickname (optional)",
+        "artist": "Artist name",
+        "title": "Song title",
         "submitButtonTitle": "Submit",
         "submissionDone": "Thank you for your suggestion!"
     }
