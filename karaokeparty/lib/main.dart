@@ -35,7 +35,7 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   log.d('Starting application');
   HydratedBloc.storage = await HydratedStorage.build(
-    storageDirectory: kIsWeb ? HydratedStorage.webStorageDirectory : await getApplicationDocumentsDirectory(),
+    storageDirectory: kIsWeb ? HydratedStorage.webStorageDirectory : await getApplicationSupportDirectory(),
   );
 
   runApp(TranslationProvider(
