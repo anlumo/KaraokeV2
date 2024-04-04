@@ -24,10 +24,9 @@
         "2020 TO 2029": "2020s"
     },
     "searchFilterDecadesTooltip": "Filter by decade",
-    "duets": {
-        "dontCare": "Both",
-        "onlyDuets": "Only duets",
-        "noDuets": "No duets"
+    "singerCount": {
+        "single": "Single",
+        "duets": "Duets"
     },
     "searchFilterDuetTooltip": "Duet setting",
     "emptyState": {

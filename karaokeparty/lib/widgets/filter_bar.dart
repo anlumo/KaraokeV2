@@ -101,28 +101,18 @@ class FilterBar extends StatelessWidget {
               message: context.t.search.searchFilterDuetTooltip,
               child: MenuAnchor(
                 menuChildren: [
-                  RadioMenuButton(
-                      value: null,
-                      groupValue: searchFilter.duet,
-                      onChanged: (_) {
-                        context.read<SearchFilterCubit>().duet = null;
+                  CheckboxMenuButton(
+                      value: searchFilter.singles,
+                      onChanged: (value) {
+                        context.read<SearchFilterCubit>().singles = value ?? false;
                       },
-                      child: Text(context.t.search.duets.dontCare)),
-                  const Divider(),
-                  RadioMenuButton(
-                      value: true,
-                      groupValue: searchFilter.duet,
-                      onChanged: (_) {
-                        context.read<SearchFilterCubit>().duet = true;
+                      child: Text(context.t.search.singerCount.single)),
+                  CheckboxMenuButton(
+                      value: searchFilter.duets,
+                      onChanged: (value) {
+                        context.read<SearchFilterCubit>().duets = value ?? false;
                       },
-                      child: Text(context.t.search.duets.onlyDuets)),
-                  RadioMenuButton(
-                      value: false,
-                      groupValue: searchFilter.duet,
-                      onChanged: (_) {
-                        context.read<SearchFilterCubit>().duet = false;
-                      },
-                      child: Text(context.t.search.duets.noDuets)),
+                      child: Text(context.t.search.singerCount.duets)),
                 ],
                 builder: (context, controller, child) => IconButton(
                     onPressed: () {
@@ -132,7 +122,7 @@ class FilterBar extends StatelessWidget {
                         controller.open();
                       }
                     },
-                    isSelected: searchFilter.duet != null,
+                    isSelected: !(searchFilter.duets && searchFilter.singles),
                     icon: const Icon(Icons.group)),
               ),
             ),

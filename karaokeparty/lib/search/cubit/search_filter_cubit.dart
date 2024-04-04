@@ -3,14 +3,15 @@ import 'package:hydrated_bloc/hydrated_bloc.dart';
 part 'search_filter_state.dart';
 
 class SearchFilterCubit extends HydratedCubit<SearchFilterState> {
-  SearchFilterCubit() : super(const SearchFilterState(languages: {}, decade: null, duet: null));
+  SearchFilterCubit() : super(const SearchFilterState(languages: {}, decade: null, duets: true, singles: true));
 
   Set<String> get languages => state.languages;
   String? get decade => state.decade;
-  bool? get duet => state.duet;
+  bool get duets => state.duets;
+  bool get singles => state.singles;
 
   set languages(Iterable<String> languages) {
-    emit(SearchFilterState(languages: Set.from(languages), decade: decade, duet: duet));
+    emit(SearchFilterState(languages: Set.from(languages), decade: decade, duets: duets, singles: singles));
   }
 
   void addLanguage(String language) {
@@ -20,7 +21,8 @@ class SearchFilterCubit extends HydratedCubit<SearchFilterState> {
         language,
       },
       decade: decade,
-      duet: duet,
+      duets: duets,
+      singles: singles,
     ));
   }
 
@@ -28,7 +30,8 @@ class SearchFilterCubit extends HydratedCubit<SearchFilterState> {
     emit(SearchFilterState(
       languages: languages.where((element) => element != language).toSet(),
       decade: decade,
-      duet: duet,
+      duets: duets,
+      singles: singles,
     ));
   }
 
@@ -41,15 +44,23 @@ class SearchFilterCubit extends HydratedCubit<SearchFilterState> {
   }
 
   set decade(String? decade) {
-    emit(SearchFilterState(languages: languages, decade: decade, duet: duet));
+    emit(SearchFilterState(languages: languages, decade: decade, duets: duets, singles: singles));
   }
 
-  set duet(bool? duet) {
-    emit(SearchFilterState(languages: languages, decade: decade, duet: duet));
+  set duets(bool duets) {
+    emit(SearchFilterState(languages: languages, decade: decade, duets: duets, singles: singles));
+  }
+
+  set singles(bool singles) {
+    emit(SearchFilterState(languages: languages, decade: decade, duets: duets, singles: singles));
   }
 
   String? queryString(String? text) {
-    if (text == null && state.languages.isEmpty && state.decade == null && state.duet == null) {
+    if (text == null &&
+        state.languages.isEmpty &&
+        state.decade == null &&
+        state.duets == true &&
+        state.singles == true) {
       return null;
     }
 
@@ -57,7 +68,8 @@ class SearchFilterCubit extends HydratedCubit<SearchFilterState> {
       if (text != null) text,
       if (state.languages.isNotEmpty) '(${state.languages.map((lang) => 'language:"$lang"').join(' OR ')})',
       if (state.decade != null) 'year:[${state.decade!}]',
-      if (state.duet != null) 'duet:${state.duet}',
+      if (state.duets && !state.singles) 'duet:true',
+      if (!state.duets && state.singles) 'duet:false',
     ].join(' AND ');
   }
 
@@ -65,13 +77,15 @@ class SearchFilterCubit extends HydratedCubit<SearchFilterState> {
   SearchFilterState fromJson(Map<String, dynamic> json) => SearchFilterState(
         languages: Set.from(json['languages']),
         decade: json['decade'],
-        duet: json['duet'],
+        duets: json['duets'] ?? true,
+        singles: json['singles'] ?? true,
       );
 
   @override
   Map<String, dynamic> toJson(SearchFilterState state) => {
         'languages': state.languages.toList(growable: false),
         'decade': state.decade,
-        'duet': state.duet,
+        'duets': state.duets,
+        'singles': state.singles,
       };
 }
