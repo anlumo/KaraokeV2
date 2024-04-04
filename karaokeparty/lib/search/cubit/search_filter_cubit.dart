@@ -65,7 +65,7 @@ class SearchFilterCubit extends HydratedCubit<SearchFilterState> {
     }
 
     return [
-      if (text != null) text,
+      if (text != null) '($text)',
       if (state.languages.isNotEmpty) '(${state.languages.map((lang) => 'language:"$lang"').join(' OR ')})',
       if (state.decade != null) 'year:[${state.decade!}]',
       if (state.duets && !state.singles) 'duet:true',
