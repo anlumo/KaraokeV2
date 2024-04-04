@@ -93,36 +93,45 @@ class _AddDialogState extends State<_AddDialog> {
       ],
       content: Column(
         mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           SongCard(
             song: widget.song,
             api: widget.api,
             disabled: true,
           ),
-          BlocBuilder<PlaylistCubit, PlaylistState>(
-            bloc: widget.playlistCubit,
-            builder: (context, state) {
-              String? helperText;
-              if (state.songQueue.isNotEmpty) {
-                final prediction = state.songQueue.last.predictedEnd?.difference(DateTime.now().toUtc());
-                if (!(prediction?.isNegative ?? true)) {
-                  helperText = context.t.search.addDialog.playPrediction(min: prediction!.inMinutes);
+          if (widget.song.language != null)
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Text(context.t.search.addDialog.languageLabel(language: widget.song.language!)),
+            ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8.0),
+            child: BlocBuilder<PlaylistCubit, PlaylistState>(
+              bloc: widget.playlistCubit,
+              builder: (context, state) {
+                String? helperText;
+                if (state.songQueue.isNotEmpty) {
+                  final prediction = state.songQueue.last.predictedEnd?.difference(DateTime.now().toUtc());
+                  if (!(prediction?.isNegative ?? true)) {
+                    helperText = context.t.search.addDialog.playPrediction(min: prediction!.inMinutes);
+                  }
                 }
-              }
-              return TimerBuilder.periodic(const Duration(seconds: 10), builder: (context) {
-                return TextField(
-                  autofocus: true,
-                  controller: _singerController,
-                  autocorrect: false,
-                  autofillHints: const [AutofillHints.name],
-                  decoration: InputDecoration(
-                    labelText: context.t.search.addDialog.singerTextTitle(n: widget.song.duet ? 2 : 1),
-                    helperText: helperText,
-                  ),
-                  onSubmitted: (text) => _submit(context),
-                );
-              });
-            },
+                return TimerBuilder.periodic(const Duration(seconds: 10), builder: (context) {
+                  return TextField(
+                    autofocus: true,
+                    controller: _singerController,
+                    autocorrect: false,
+                    autofillHints: const [AutofillHints.name],
+                    decoration: InputDecoration(
+                      labelText: context.t.search.addDialog.singerTextTitle(n: widget.song.duet ? 2 : 1),
+                      helperText: helperText,
+                    ),
+                    onSubmitted: (text) => _submit(context),
+                  );
+                });
+              },
+            ),
           ),
         ],
       ),

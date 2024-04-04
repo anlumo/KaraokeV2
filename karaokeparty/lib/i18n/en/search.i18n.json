@@ -6,6 +6,7 @@
             "one": "Your name",
             "other": "Your names"
         },
+        "languageLabel": "Language: $language",
         "playPrediction": "Estimated time to the song is $min minutes.",
         "submitButton": "Submit",
         "cancelButton": "Cancel"
