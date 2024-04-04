@@ -5,6 +5,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hydrated_bloc/hydrated_bloc.dart';
 import 'package:karaokeparty/api/api.dart';
 import 'package:karaokeparty/api/cubit/connection_cubit.dart';
+import 'package:karaokeparty/api/cubit/playlist_cubit.dart';
 import 'package:karaokeparty/api/song_cache.dart';
 import 'package:karaokeparty/browse/browse.dart';
 import 'package:karaokeparty/i18n/strings.g.dart';
@@ -192,7 +193,20 @@ class _MyAppState extends State<MyApp> {
                                 if (compactLayout)
                                   Tooltip(
                                     message: context.t.core.playlistTooltip,
-                                    child: const Tab(icon: Icon(Icons.mic_external_on)),
+                                    child: Tab(
+                                      icon: BlocBuilder<PlaylistCubit, PlaylistState>(
+                                        builder: (context, state) {
+                                          const icon = Icon(Icons.mic_external_on);
+                                          if (state.songQueue.isEmpty) {
+                                            return icon;
+                                          }
+                                          return Badge(
+                                            label: Text(state.songQueue.length.toString()),
+                                            child: icon,
+                                          );
+                                        },
+                                      ),
+                                    ),
                                   ),
                               ],
                               padding: compactLayout ? null : const EdgeInsets.only(right: wideLayoutSidebarWidth),
