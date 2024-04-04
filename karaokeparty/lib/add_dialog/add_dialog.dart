@@ -116,7 +116,7 @@ class _AddDialogState extends State<_AddDialog> {
                   autocorrect: false,
                   autofillHints: const [AutofillHints.name],
                   decoration: InputDecoration(
-                    labelText: context.t.search.addDialog.singerTextTitle,
+                    labelText: context.t.search.addDialog.singerTextTitle(n: widget.song.duet ? 2 : 1),
                     helperText: helperText,
                   ),
                   onSubmitted: (text) => _submit(context),
