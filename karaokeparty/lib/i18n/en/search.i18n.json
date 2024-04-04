@@ -8,6 +8,7 @@
         },
         "languageLabel": "Language: $language",
         "playPrediction": "Estimated time to the song is $min minutes.",
+        "alreadyAddedWarning": "Somebody has already requested this song. Don't you want to join their performance instead?",
         "submitButton": "Submit",
         "cancelButton": "Cancel"
     },
