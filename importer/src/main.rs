@@ -1,7 +1,7 @@
 use std::{
     collections::HashSet,
     ffi::OsStr,
-    fs::read_dir,
+    fs::{metadata, read_dir},
     os::unix::ffi::OsStrExt,
     path::{Path, PathBuf},
 };
