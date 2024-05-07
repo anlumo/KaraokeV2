@@ -121,17 +121,26 @@ fn walk_dir(
     insert_stmt: &mut Statement<'_>,
     inserted_set: &mut HashSet<PathBuf>,
 ) -> anyhow::Result<()> {
-    for path in read_dir(path)? {
-        let path = path?;
-        if path.file_type()?.is_dir() {
-            // song directory
-            walk_dir(path.path(), strip_components, insert_stmt, inserted_set)?;
-        } else if path.file_type()?.is_file() {
-            let file_path = path.path();
-            if let Some(b"txt") = file_path.extension().map(|ext| ext.as_bytes()) {
-                if let Err(err) = parse_txt(&file_path, strip_components, insert_stmt, inserted_set)
-                {
-                    eprintln!("{err}");
+    for entry in read_dir(path)? {
+        let entry = entry?;
+
+        // Retrieve metadata based on the actual file or symlink.
+        let file_type = entry.file_type()?;
+
+        if file_type.is_dir() || (file_type.is_symlink() && metadata(entry.path())?.is_dir()) {
+            // Recursive call if it's a directory or a symlink pointing to a directory
+            walk_dir(entry.path(), strip_components, insert_stmt, inserted_set)?;
+        } else if file_type.is_file() {
+            // Handle files, specifically .txt files.
+            let file_path = entry.path();
+            if let Some(ext) = file_path.extension() {
+                if ext == "txt" {
+                    // Process txt file
+                    if let Err(err) =
+                        parse_txt(&file_path, strip_components, insert_stmt, inserted_set)
+                    {
+                        eprintln!("{err}");
+                    }
                 }
             }
         }
