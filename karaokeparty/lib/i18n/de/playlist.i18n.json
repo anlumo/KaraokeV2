@@ -1,0 +1,16 @@
+{
+    "nowPlayingTitle": "Jetzt live!",
+    "songDetailsDialog": {
+        "closeButton": "Schließen"
+    },
+    "deleteLabel": "Entfernen",
+    "emptyState": "Es hat sich noch keine Person angemeldet. Jetzt ist die beste Gelegenheit sich anzumelden!",
+    "predictedPlayTimeInMinutes": "in $min Minuten",
+    "predictedPlayTimeInThePast": "jetzt",
+    "bugReport": {
+        "title": "Bug report für $title",
+        "textFieldLabel": "Problembeschreibung",
+        "submitButton": "Absenden",
+        "cancelButton": "Abbrechen"
+    }
+}

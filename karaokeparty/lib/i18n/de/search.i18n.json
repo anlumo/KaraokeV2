@@ -1,0 +1,52 @@
+{
+    "clearTextButton": "Lösche",
+    "addDialog": {
+        "title": "Lied eintragen",
+        "singerTextTitle": {
+            "one": "Dein Name",
+            "other": "Eure Namen"
+        },
+        "languageLabel": "Sprache: $language",
+        "playPrediction": "Das Lied ist in ca. $min Minuten dran.",
+        "alreadyAddedWarning": "Dieses Lied ist bereits in der Liste. Wollt ihr lieber gemeinsam singen?",
+        "submitButton": "Absenden",
+        "cancelButton": "Abbrechen"
+    },
+    "searchFilterAllLanguages": "Alle",
+    "searchFilterLanguagesTooltip": "Nach Sprache filtern",
+    "searchFilterAllYears": "Alle",
+    "searchFilterDecades(map)": {
+        "1930 TO 1939": "1930er",
+        "1940 TO 1949": "1940er",
+        "1950 TO 1959": "1950er",
+        "1960 TO 1969": "1960er",
+        "1970 TO 1979": "1970er",
+        "1980 TO 1989": "1980er",
+        "1990 TO 1999": "1990er",
+        "2000 TO 2009": "2000er",
+        "2010 TO 2019": "2010er",
+        "2020 TO 2029": "2020er"
+    },
+    "searchFilterDecadesTooltip": "Nach Jahrzehnt filtern",
+    "singerCount": {
+        "single": "Solo",
+        "duets": "Duette"
+    },
+    "searchFilterDuetTooltip": "Duett Einstellung",
+    "emptyState": {
+        "explanation": "Suche nach Interpret:innen, Titeln oder Liedtexten. Verwende Anführungszeichen um \"nach Phrasen zu suchen\". Mit einem - kannst Du einen Begriff ausschließen.",
+        "randomPickListTitle": "Einige Vorschläge:",
+        "rerollRandom": "Neue Vorschläge zeigen"
+    },
+    "searchQueryParserError": "Unable to understand your search query.",
+    "searchHint": "Suche",
+    "suggestSong": {
+        "explanation": "Leider garnichts gefunden. Sind noch Filter aktiv? ",
+        "yourName": "Dein Name (optional)",
+        "artist": "Interpret:in",
+        "title": "Titel",
+        "submitButtonTitle": "Absenden",
+        "submissionDone": "Danke für Deinen Vorschlag!"
+    },
+    "browseTitle": "Durchstöbern"
+}

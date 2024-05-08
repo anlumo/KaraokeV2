@@ -1,0 +1,19 @@
+{
+    "title": "Karaoke Party",
+    "searchTabTooltip": "Suche",
+    "masterListTooltip": "Bibliothek durchstöbern",
+    "playlistTooltip": "Aktuelle Playlist",
+    "twoPlayerSongTooltip": "Duett",
+    "songCardArtistYear": "$artist ($year)",
+    "showSongDetailsButton": "Zeige Details",
+    "adminModeTitle": "MC",
+    "logoutAdminModeTitle": "Abmelden",
+    "adminModeButtonTooltip": "Als MC anmelden",
+    "darkModeButtonTooltip": "hell/dunkel",
+    "connection": {
+        "connectingToServerOverlay": "Verbinden…",
+        "connectionFailedError": "Verbindung fehlgeschlagen",
+        "connectionRefusedError": "Verbindung abgelehnt",
+        "retryButton": "Erneut versuchen"
+    }
+}
