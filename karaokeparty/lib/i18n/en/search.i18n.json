@@ -16,6 +16,8 @@
     "searchFilterLanguagesTooltip": "Filter by language",
     "searchFilterAllYears": "All",
     "searchFilterDecades(map)": {
+        "1930 TO 1939": "1930s",
+        "1940 TO 1949": "1940s",
         "1950 TO 1959": "1950s",
         "1960 TO 1969": "1960s",
         "1970 TO 1979": "1970s",
@@ -32,14 +34,14 @@
     },
     "searchFilterDuetTooltip": "Duet setting",
     "emptyState": {
-        "explanation": "Tap on the search field above and enter freeform text to search for artists, titles or lyrics. Use quotes to search for phrases, and you can also use - before a word to exclude it.\nTap the die on the right to get a random pick!",
+        "explanation": "Search for artists, titles or lyrics. Use quotes to \"search for phrases\", prepend a term with -  to exclude it.",
         "randomPickListTitle": "Some suggestions:",
         "rerollRandom": "Show new suggestions"
     },
     "searchQueryParserError": "Unable to understand your search query.",
     "searchHint": "Search",
     "suggestSong": {
-        "explanation": "Can't find anything. Looking for a particular song? Please explain:",
+        "explanation": "Sorry, nothing found. Are filters active? You can also make a wish for the future.",
         "yourName": "Your nickname (optional)",
         "artist": "Artist name",
         "title": "Song title",

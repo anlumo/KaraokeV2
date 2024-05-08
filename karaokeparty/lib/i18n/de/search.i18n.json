@@ -41,7 +41,7 @@
     "searchQueryParserError": "Unable to understand your search query.",
     "searchHint": "Suche",
     "suggestSong": {
-        "explanation": "Leider garnichts gefunden. Sind noch Filter aktiv? ",
+        "explanation": "Leider garnichts gefunden. Sind noch Filter aktiv? Du kannst auch einen Wunsch für die Zukunft hinterlassen.",
         "yourName": "Dein Name (optional)",
         "artist": "Interpret:in",
         "title": "Titel",
