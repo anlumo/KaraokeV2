@@ -1,0 +1,8 @@
+{
+    "title": "Als MC anmelden",
+    "passwordPrompt": "Passwort",
+    "loginButton": "Anmelden",
+    "cancelButton": "Abbrechen",
+    "loggedInSnackbar": "Erfolgreich angemeldet.",
+    "loginFailedSnackbar": "Anmeldung fehlgeschlagen, ungültiges Passwort."
+}
