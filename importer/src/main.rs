@@ -121,18 +121,18 @@ fn walk_dir(
     insert_stmt: &mut Statement<'_>,
     inserted_set: &mut HashSet<PathBuf>,
 ) -> anyhow::Result<()> {
-    for entry in read_dir(path)? {
-        let entry = entry?;
+    for subdir in read_dir(path)? {
+        let subdir = subdir?;
 
         // Retrieve metadata based on the actual file or symlink.
-        let file_type = entry.file_type()?;
+        let file_type = subdir.file_type()?;
 
-        if file_type.is_dir() || (file_type.is_symlink() && metadata(entry.path())?.is_dir()) {
+        if file_type.is_dir() || (file_type.is_symlink() && metadata(subdir.path())?.is_dir()) {
             // Recursive call if it's a directory or a symlink pointing to a directory
-            walk_dir(entry.path(), strip_components, insert_stmt, inserted_set)?;
+            walk_dir(subdir.path(), strip_components, insert_stmt, inserted_set)?;
         } else if file_type.is_file() {
             // Handle files, specifically .txt files.
-            let file_path = entry.path();
+            let file_path = subdir.path();
             if let Some(ext) = file_path.extension() {
                 if ext == "txt" {
                     // Process txt file
