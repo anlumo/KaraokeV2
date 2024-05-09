@@ -14,13 +14,15 @@ use uuid::Uuid;
 
 use crate::AppState;
 
+
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(rename_all = "camelCase", tag = "cmd")]
 enum Command {
     Authenticate { password: String },
-    Add { song: i64, singer: String },
+    Add { song: i64, singer: String, password: String },
     Play { id: Uuid },
-    Remove { id: Uuid },
+    RemoveAsAdmin { id: Uuid },
+    RemoveAsUser { id: Uuid, password: String },
     Swap { id1: Uuid, id2: Uuid },
     MoveAfter { id: Uuid, after: Uuid },
     MoveTop { id: Uuid },
@@ -74,15 +76,19 @@ async fn handle_socket(socket: WebSocket, who: SocketAddr, state: Arc<AppState>)
                                             log::debug!("[{who:?}] Tried to authenticate, result = {authenticated}");
                                             sender.send(Message::Binary(vec![authenticated as u8])).await.map_err(anyhow::Error::from)
                                         }
-                                        Command::Add { song, singer } => {
-                                            state.playlist.add(song, singer, &state.index).await.map(|_| ())
+                                        Command::Add { song, singer, password} => {
+                                            state.playlist.add(song, singer, password, &state.index).await.map(|_| ())
                                         }
                                         Command::Play { id } if authenticated => {
                                             state.playlist.play(id, &state.index).await.map(|_| ())
                                         }
-                                        Command::Remove { id } if authenticated => {
+                                        Command::RemoveAsAdmin { id } if authenticated => {
                                             state.playlist.remove(id, &state.index).await.map(|_| ())
                                         }
+                                        Command::RemoveAsUser { id,password  } => {
+                                            state.playlist.remove_if_password_correct(id, password, &state.index).await.map(|_| ())
+                                        }
+
                                         Command::Swap { id1, id2 } if authenticated => {
                                             state.playlist.swap(id1, id2, &state.index).await.map(|_| ())
                                         }
