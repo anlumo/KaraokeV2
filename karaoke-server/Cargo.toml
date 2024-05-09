@@ -37,3 +37,4 @@ csv = "1.3.0"
 log4rs = "1.2.0"
 serde_yaml = "0.9.30"
 zstd-sys = "=2.0.9" # workaround for https://github.com/gyscos/zstd-rs/issues/270
+sha256 = "1.5.0"
