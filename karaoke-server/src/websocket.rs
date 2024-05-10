@@ -19,7 +19,8 @@ use crate::AppState;
 #[serde(rename_all = "camelCase", tag = "cmd")]
 enum Command {
     Authenticate { password: String },
-    Add { song: i64, singer: String, password: String },
+    // If not password is set, tha song CAN NOT be deleted
+    Add { song: i64, singer: String, password: Option<String> },
     Play { id: Uuid },
     RemoveAsAdmin { id: Uuid },
     RemoveAsUser { id: Uuid, password: String },

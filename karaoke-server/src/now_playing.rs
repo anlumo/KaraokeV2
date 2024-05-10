@@ -3,9 +3,9 @@ use std::{
     path::{Path, PathBuf},
 };
 
-use sha256::digest;
 use csv::{StringRecord, Writer};
 use serde::{Deserialize, Serialize};
+use sha256::digest;
 use tantivy::time::OffsetDateTime;
 use time::{format_description::well_known::Rfc3339, Duration};
 use tokio::{
@@ -25,7 +25,7 @@ pub struct PlaylistEntry {
     id: Uuid,
     song: i64,
     singer: String,
-    password_hash: String,
+    password_hash: Option<String>,
     #[serde(with = "time::serde::rfc3339")]
     predicted_end: OffsetDateTime,
 }
@@ -128,7 +128,7 @@ impl Playlist {
         &self,
         song: i64,
         singer: String,
-        password: String,
+        password: Option<String>,
         index: &SearchIndex,
     ) -> anyhow::Result<Option<Uuid>> {
         if !self.valid_songs.contains(&song) {
@@ -147,10 +147,11 @@ impl Playlist {
                     + Duration::seconds_f64(songs[0].duration)
             };
             let id = Uuid::new_v4();
+            let maybe_hash = password.map(|password| digest(&password));
             queue.list.push_back(PlaylistEntry {
                 id,
                 singer,
-                password_hash: digest(password),
+                password_hash: maybe_hash,
                 song,
                 predicted_end,
             });
@@ -228,8 +229,7 @@ impl Playlist {
         }
     }
 
-    fn find_song_in_queue( playlist: &VecDeque<PlaylistEntry>, id: Uuid) -> Option<usize>
-    {
+    fn find_song_in_queue(playlist: &VecDeque<PlaylistEntry>, id: Uuid) -> Option<usize> {
         playlist
             .iter()
             .enumerate()
@@ -238,26 +238,31 @@ impl Playlist {
 
     pub async fn remove(&self, id: Uuid, index: &SearchIndex) -> anyhow::Result<bool> {
         let mut queue = self.song_queue.write().await;
-        if let Some(queue_index) = Self::find_song_in_queue(&queue.list, id)
-        {
+        if let Some(queue_index) = Self::find_song_in_queue(&queue.list, id) {
             queue.list.remove(queue_index);
             Self::did_change(&mut queue, &self.persist_path, index).await?;
             return Ok(true);
-        } 
-            Ok(false)
+        }
+        Ok(false)
     }
 
-    pub async fn remove_if_password_correct(&self, id: Uuid, password: String, index: &SearchIndex) -> anyhow::Result<bool> {
+    pub async fn remove_if_password_correct(
+        &self,
+        id: Uuid,
+        password: String,
+        index: &SearchIndex,
+    ) -> anyhow::Result<bool> {
         let mut queue = self.song_queue.write().await;
-        if let Some(queue_index) = Self::find_song_in_queue(&queue.list, id)
-        {
-            if digest(password) == queue.list[queue_index].password_hash{
-                queue.list.remove(queue_index);
-                Self::did_change(&mut queue, &self.persist_path, index).await?;
-                return Ok(true);
+        if let Some(queue_index) = Self::find_song_in_queue(&queue.list, id) {
+            if let Some(hash) = &queue.list[queue_index].password_hash {
+                if &digest(password) == hash {
+                    queue.list.remove(queue_index);
+                    Self::did_change(&mut queue, &self.persist_path, index).await?;
+                    return Ok(true);
+                }
             }
         }
-            Ok(false)
+        Ok(false)
     }
 
     pub async fn swap(&self, id1: Uuid, id2: Uuid, index: &SearchIndex) -> anyhow::Result<bool> {
