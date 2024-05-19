@@ -16,7 +16,7 @@ dependencies = ["slang"]
 script_runner = "@shell"
 script = '''
 cd karaokeparty
-flutter build web --web-renderer canvaskit
+flutter build web --release --wasm
 '''
 
 [tasks.build-server]
