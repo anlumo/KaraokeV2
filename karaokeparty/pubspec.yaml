@@ -9,7 +9,7 @@ environment:
 
 dependencies:
   animated_list_plus: ^0.5.2
-  audioplayers: ^5.2.1
+  audioplayers: ^6.0.0
   flutter:
     sdk: flutter
   flutter_localizations:
@@ -20,22 +20,22 @@ dependencies:
   http: ^1.1.2
   hydrated_bloc: ^9.1.5
   infinite_scroll_pagination: ^4.0.0
-  intl: ^0.18.1
+  intl: ^0.19.0
   logger: ^2.0.2+1
   path_provider: ^2.1.2
-  rounded_loading_button: ^2.1.0
+  rounded_loading_button_plus: ^3.0.1
   shared_preferences: ^2.2.2
   skeletonizer: ^1.1.1
   slang: ^3.28.0
   timer_builder: ^2.0.0
   uuid: ^4.2.2
-  web_socket_channel: ^2.4.0
+  web_socket_channel: ^3.0.0
   crypto: ^3.0.3
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  flutter_lints: ^3.0.1
+  flutter_lints: ^4.0.0
   slang_flutter: ^3.17.0
   slang_build_runner: ^3.17.0
 

@@ -4,10 +4,9 @@ import 'package:karaokeparty/api/api.dart';
 import 'package:karaokeparty/api/cubit/connection_cubit.dart';
 import 'package:karaokeparty/api/cubit/playlist_cubit.dart';
 import 'package:karaokeparty/i18n/strings.g.dart';
-import 'package:karaokeparty/model/playlist_entry.dart';
 import 'package:karaokeparty/model/song.dart';
 import 'package:karaokeparty/widgets/song_card.dart';
-import 'package:rounded_loading_button/rounded_loading_button.dart';
+import 'package:rounded_loading_button_plus/rounded_loading_button.dart';
 import 'package:timer_builder/timer_builder.dart';
 import 'package:uuid/uuid.dart';
 

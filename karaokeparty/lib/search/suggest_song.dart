@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:karaokeparty/api/api.dart';
 import 'package:karaokeparty/i18n/strings.g.dart';
 import 'package:karaokeparty/main.dart';
-import 'package:rounded_loading_button/rounded_loading_button.dart';
+import 'package:rounded_loading_button_plus/rounded_loading_button.dart';
 
 class SuggestSong extends StatefulWidget {
   const SuggestSong({super.key, required this.failedSearch, required this.api});

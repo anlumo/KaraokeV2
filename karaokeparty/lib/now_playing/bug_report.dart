@@ -3,7 +3,7 @@ import 'package:karaokeparty/api/api.dart';
 import 'package:karaokeparty/api/cubit/connection_cubit.dart';
 import 'package:karaokeparty/i18n/strings.g.dart';
 import 'package:karaokeparty/model/song.dart';
-import 'package:rounded_loading_button/rounded_loading_button.dart';
+import 'package:rounded_loading_button_plus/rounded_loading_button.dart';
 
 class _BugReportDialog extends StatefulWidget {
   const _BugReportDialog({required this.song, required this.api});

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:karaokeparty/api/cubit/connection_cubit.dart';
 import 'package:karaokeparty/i18n/strings.g.dart';
-import 'package:rounded_loading_button/rounded_loading_button.dart';
+import 'package:rounded_loading_button_plus/rounded_loading_button.dart';
 
 class _LoginDialog extends StatefulWidget {
   const _LoginDialog({required this.connection});
