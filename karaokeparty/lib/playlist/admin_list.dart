@@ -50,7 +50,12 @@ class AdminList extends StatelessWidget {
                       log.d('render item $i singer ${item.singer}');
 
                       if (i == songQueueNowPlaying) {
-                        return NowPlaying(songCache: songCache, api: api, entry: item);
+                        return NowPlaying(
+                          songCache: songCache,
+                          api: api,
+                          entry: item,
+                          onRemove: null,
+                        );
                       }
                       if (songQueueNowPlaying != null && i < songQueueNowPlaying!) {
                         return PlaylistSongCard(
@@ -59,6 +64,7 @@ class AdminList extends StatelessWidget {
                           api: api,
                           selected: selectedItem == i,
                           predictedPlayTime: null,
+                          onRemove: null,
                         );
                       }
 
@@ -81,6 +87,7 @@ class AdminList extends StatelessWidget {
                                 predictedPlayTime: (i > 0 && (songQueueNowPlaying == null || i > songQueueNowPlaying!))
                                     ? songQueue[i - 1].predictedEnd
                                     : null,
+                                onRemove: null,
                               ),
                             ),
                           ),

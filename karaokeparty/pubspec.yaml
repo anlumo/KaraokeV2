@@ -30,6 +30,7 @@ dependencies:
   timer_builder: ^2.0.0
   uuid: ^4.2.2
   web_socket_channel: ^2.4.0
+  crypto: ^3.0.3
 
 dev_dependencies:
   flutter_test:

@@ -9,31 +9,34 @@ import 'package:karaokeparty/i18n/strings.g.dart';
 import 'package:karaokeparty/main.dart';
 import 'package:karaokeparty/model/playlist_entry.dart';
 import 'package:karaokeparty/model/song.dart';
-import 'package:karaokeparty/widgets/song_player.dart';
 import 'package:karaokeparty/widgets/song_details_dialog.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 import 'package:timer_builder/timer_builder.dart';
 
 class SongCard extends StatelessWidget {
-  SongCard(
-      {required this.song,
-      required this.api,
-      this.singer,
-      this.disabled = false,
-      this.selected = false,
-      this.predictedPlaytime,
-      super.key});
+  SongCard({
+    required this.song,
+    required this.api,
+    this.singer,
+    this.disabled = false,
+    this.selected = false,
+    this.predictedPlaytime,
+    this.onRemove,
+    super.key,
+  });
 
   final Song song;
   final title = ConstraintId('title');
   final coverImage = ConstraintId('coverImage');
   final playAudio = ConstraintId('playAudio');
   final duet = ConstraintId('duet');
+  final singerId = ConstraintId('singer');
   final String? singer;
   final DateTime? predictedPlaytime;
   final ServerApi api;
   final bool disabled;
   final bool selected;
+  final void Function()? onRemove;
 
   @override
   Widget build(BuildContext context) {
@@ -63,11 +66,20 @@ class SongCard extends StatelessWidget {
                   style: theme.textTheme.labelLarge!
                       .copyWith(overflow: TextOverflow.ellipsis, color: theme.colorScheme.primary),
                 ).applyConstraint(
+                  id: singerId,
                   centerVerticalTo: song.duet ? duet : null,
                   top: song.duet ? null : parent.top.margin(8),
                   left: song.duet ? duet.right.margin(8) : parent.left.margin(8),
                   right: coverImage.left.margin(8),
                   width: matchConstraint,
+                ),
+              if (singer != null && onRemove != null)
+                Tooltip(
+                  message: context.t.playlist.deleteLabel,
+                  child: const Icon(Icons.remove),
+                ).applyConstraint(
+                  left: singerId.right.margin(8),
+                  centerHorizontalTo: singerId,
                 ),
               Text(
                 song.title,
@@ -179,6 +191,7 @@ class PlaylistSongCard extends StatelessWidget {
     required this.entry,
     required this.api,
     required this.predictedPlayTime,
+    required this.onRemove,
     this.selected = false,
     super.key,
   });
@@ -188,6 +201,7 @@ class PlaylistSongCard extends StatelessWidget {
   final ServerApi api;
   final bool selected;
   final DateTime? predictedPlayTime;
+  final void Function()? onRemove;
 
   @override
   Widget build(BuildContext context) {
@@ -200,6 +214,7 @@ class PlaylistSongCard extends StatelessWidget {
         disabled: true,
         selected: selected,
         predictedPlaytime: predictedPlayTime,
+        onRemove: onRemove,
       );
     }
 
@@ -233,6 +248,7 @@ class PlaylistSongCard extends StatelessWidget {
           disabled: true,
           selected: selected,
           predictedPlaytime: predictedPlayTime,
+          onRemove: onRemove,
         );
       },
     );

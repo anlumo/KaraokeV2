@@ -9,11 +9,18 @@ import 'package:karaokeparty/now_playing/bug_report.dart';
 import 'package:karaokeparty/widgets/song_card.dart';
 
 class NowPlaying extends StatelessWidget {
-  const NowPlaying({required this.songCache, required this.api, required this.entry, super.key});
+  const NowPlaying({
+    required this.songCache,
+    required this.api,
+    required this.entry,
+    required this.onRemove,
+    super.key,
+  });
 
   final SongCache songCache;
   final ServerApi api;
   final PlaylistEntry entry;
+  final void Function()? onRemove;
 
   @override
   Widget build(BuildContext context) {
@@ -61,6 +68,7 @@ class NowPlaying extends StatelessWidget {
             entry: entry,
             api: api,
             predictedPlayTime: null,
+            onRemove: onRemove,
           ),
         ],
       ),

@@ -21,10 +21,21 @@ class ConnectionCubit extends Cubit<WebSocketConnectionState> {
 
   SharedPreferences sharedPreferences;
   Completer<bool>? _loginListener;
+  UuidValue? _password;
 
   Future<void> connect(PlaylistCubit playlist) async {
     final wsUrl = Uri.parse(serverHost.wsUrl);
     log.d('Connecting to $wsUrl...');
+
+    if (_password == null) {
+      final songPassword = sharedPreferences.getString('song_password');
+      if (songPassword != null) {
+        _password = UuidValue.fromString(songPassword);
+      } else {
+        _password = const Uuid().v4obj();
+        sharedPreferences.setString('song_password', _password!.toString());
+      }
+    }
 
     emit(const WebSocketConnectingState());
     final channel = WebSocketChannel.connect(wsUrl);
@@ -64,7 +75,8 @@ class ConnectionCubit extends Cubit<WebSocketConnectionState> {
     }
 
     final languages = (jsonDecode(languagesResponse.body) as List).whereType<String>().toList(growable: false);
-    emit(WebSocketConnectedState(sink: channel.sink, songCount: songCount, isAdmin: false, languages: languages));
+    emit(WebSocketConnectedState(
+        sink: channel.sink, songCount: songCount, isAdmin: false, languages: languages, password: _password));
 
     channel.stream.listen((message) {
       if (message is String) {
@@ -96,7 +108,8 @@ class ConnectionCubit extends Cubit<WebSocketConnectionState> {
           _loginListener!.complete(success);
           _loginListener = null;
         }
-        emit(WebSocketConnectedState(sink: channel.sink, songCount: songCount, isAdmin: success, languages: languages));
+        emit(WebSocketConnectedState(
+            sink: channel.sink, songCount: songCount, isAdmin: success, languages: languages, password: _password));
       }
     }, onError: (error) {
       log.e('Websocket connection failed: $error');

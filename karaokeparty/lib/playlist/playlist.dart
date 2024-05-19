@@ -1,3 +1,6 @@
+import 'dart:convert';
+
+import 'package:crypto/crypto.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -135,7 +138,7 @@ class _PlaylistState extends State<Playlist> {
           InitialWebSocketConnectionState() || WebSocketConnectingState() => const Center(
               child: SizedBox(width: 50, height: 50, child: CircularProgressIndicator()),
             ),
-          WebSocketConnectedState(:final isAdmin) => BlocConsumer<PlaylistCubit, PlaylistState>(
+          WebSocketConnectedState(:final isAdmin, :final password) => BlocConsumer<PlaylistCubit, PlaylistState>(
               listener: (context, state) {
                 log.d('Received list update: $state');
                 _songQueue = List.from(state.playHistory.followedBy(state.songQueue));
@@ -147,6 +150,8 @@ class _PlaylistState extends State<Playlist> {
                 }
               },
               builder: (context, state) {
+                final passwordHash =
+                    password != null ? sha256.convert(utf8.encode(password.toString())).toString() : null;
                 _songQueue ??= List.from(state.playHistory.followedBy(state.songQueue));
                 _songQueueNowPlaying ??= state.playHistory.length - 1;
                 if (_songQueue?.isEmpty ?? true) {
@@ -181,6 +186,8 @@ class _PlaylistState extends State<Playlist> {
                     songCache: widget.songCache,
                     songQueue: _songQueue!,
                     songQueueNowPlaying: _songQueueNowPlaying,
+                    passwordHash: passwordHash,
+                    onRemove: passwordHash != null ? (id) => connectionState.remove(id) : null,
                   );
                 } else {
                   return const SizedBox();

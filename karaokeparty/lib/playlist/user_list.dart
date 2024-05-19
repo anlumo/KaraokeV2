@@ -6,6 +6,7 @@ import 'package:karaokeparty/main.dart';
 import 'package:karaokeparty/model/playlist_entry.dart';
 import 'package:karaokeparty/now_playing/now_playing.dart';
 import 'package:karaokeparty/widgets/song_card.dart';
+import 'package:uuid/uuid.dart';
 
 class UserList extends StatelessWidget {
   const UserList({
@@ -14,12 +15,16 @@ class UserList extends StatelessWidget {
     required this.songCache,
     required this.songQueue,
     required this.songQueueNowPlaying,
+    required this.passwordHash,
+    required this.onRemove,
   });
 
   final SongCache songCache;
   final ServerApi api;
   final List<PlaylistEntry> songQueue;
   final int? songQueueNowPlaying;
+  final String? passwordHash;
+  final void Function(UuidValue id)? onRemove;
 
   @override
   Widget build(BuildContext context) {
@@ -27,8 +32,10 @@ class UserList extends StatelessWidget {
       primary: true,
       items: songQueue,
       itemBuilder: (context, itemAnimation, item, i) {
+        final canRemove = passwordHash != null && onRemove != null && item.password == passwordHash;
+
         if (i == songQueueNowPlaying) {
-          return NowPlaying(songCache: songCache, api: api, entry: item);
+          return NowPlaying(songCache: songCache, api: api, entry: item, onRemove: canRemove ? () {} : null);
         }
         log.d('render item $i singer ${item.singer}');
         return PlaylistSongCard(
@@ -38,6 +45,7 @@ class UserList extends StatelessWidget {
           predictedPlayTime: (i > 0 && (songQueueNowPlaying == null || i > songQueueNowPlaying!))
               ? songQueue[i - 1].predictedEnd
               : null,
+          onRemove: () => onRemove?.call(item.id),
         );
       },
       areItemsTheSame: (a, b) => a.id == b.id,

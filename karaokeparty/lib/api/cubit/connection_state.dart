@@ -13,19 +13,26 @@ final class WebSocketConnectingState extends WebSocketConnectionState {
 }
 
 final class WebSocketConnectedState extends WebSocketConnectionState {
-  const WebSocketConnectedState(
-      {required this.sink, required this.songCount, required this.isAdmin, required this.languages});
+  const WebSocketConnectedState({
+    required this.sink,
+    required this.songCount,
+    required this.isAdmin,
+    required this.languages,
+    required this.password,
+  });
 
   final WebSocketSink sink;
   final int songCount;
   final bool isAdmin;
   final List<String> languages;
+  final UuidValue? password;
 
   void submitSong({required String singer, required int songId}) {
     sink.add(jsonEncode({
       'cmd': 'add',
       'song': songId,
       'singer': singer,
+      if (password != null) 'password': password!.toString(),
     }));
   }
 
@@ -37,10 +44,20 @@ final class WebSocketConnectedState extends WebSocketConnectionState {
   }
 
   void remove(UuidValue playlistEntry) {
-    sink.add(jsonEncode({
-      'cmd': 'remove',
-      'id': playlistEntry.uuid,
-    }));
+    if (isAdmin) {
+      sink.add(jsonEncode({
+        'cmd': 'removeAsAdmin',
+        'id': playlistEntry.uuid,
+      }));
+    } else if (password != null) {
+      sink.add(jsonEncode({
+        'cmd': 'removeAsUser',
+        'id': playlistEntry.uuid,
+        'password': password!.toString(),
+      }));
+    } else {
+      log.e('Tried to remove a song, but we\'re not admin and don\'t have a password');
+    }
   }
 
   void swap(UuidValue id1, UuidValue id2) {
