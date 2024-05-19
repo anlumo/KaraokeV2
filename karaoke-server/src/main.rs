@@ -8,7 +8,9 @@ use std::{
 use axum::{
     body::Body,
     extract::{Query, State},
-    http::StatusCode,
+    http::{Request, StatusCode},
+    middleware::Next,
+    response::IntoResponse,
     routing::{get, post},
     Json, Router,
 };
@@ -23,6 +25,7 @@ use tokio::{
     io::AsyncWriteExt,
     sync::Mutex,
 };
+use tower::ServiceBuilder;
 use tower_http::{
     services::ServeDir,
     trace::{DefaultMakeSpan, TraceLayer},
@@ -56,6 +59,17 @@ pub struct AppState {
     password: String,
     languages: HashSet<String>,
     suggest_log: Mutex<File>,
+}
+
+async fn add_cors_headers(req: Request<Body>, next: Next) -> impl IntoResponse {
+    let mut response = next.run(req).await;
+    let headers = response.headers_mut();
+    headers.insert("Cross-Origin-Opener-Policy", "same-origin".parse().unwrap());
+    headers.insert(
+        "Cross-Origin-Embedder-Policy",
+        "require-corp".parse().unwrap(),
+    );
+    response
 }
 
 #[tokio::main]
@@ -152,6 +166,7 @@ async fn main() -> anyhow::Result<()> {
         .nest_service("/media", ServeDir::new(config.paths.media))
         .nest_service("/", ServeDir::new(config.paths.web_app))
         .with_state(state)
+        .layer(ServiceBuilder::new().layer(axum::middleware::from_fn(add_cors_headers)))
         .layer(
             TraceLayer::new_for_http()
                 .make_span_with(DefaultMakeSpan::default().include_headers(true)),
