@@ -31,6 +31,7 @@ class SongCard extends StatelessWidget {
   final playAudio = ConstraintId('playAudio');
   final duet = ConstraintId('duet');
   final singerId = ConstraintId('singer');
+  final deleteId = ConstraintId('delete');
   final String? singer;
   final DateTime? predictedPlaytime;
   final ServerApi api;
@@ -70,7 +71,7 @@ class SongCard extends StatelessWidget {
                   centerVerticalTo: song.duet ? duet : null,
                   top: song.duet ? null : parent.top.margin(8),
                   left: song.duet ? duet.right.margin(8) : parent.left.margin(8),
-                  right: coverImage.left.margin(8),
+                  right: onRemove != null ? deleteId.left.margin(8) : coverImage.left.margin(8),
                   width: matchConstraint,
                 ),
               if (singer != null && onRemove != null)
@@ -78,8 +79,9 @@ class SongCard extends StatelessWidget {
                   message: context.t.playlist.deleteLabel,
                   child: const Icon(Icons.remove),
                 ).applyConstraint(
-                  left: singerId.right.margin(8),
-                  centerHorizontalTo: singerId,
+                  id: deleteId,
+                  right: coverImage.left.margin(8),
+                  centerVerticalTo: singerId,
                 ),
               Text(
                 song.title,
