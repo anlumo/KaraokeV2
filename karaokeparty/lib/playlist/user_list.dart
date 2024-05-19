@@ -32,7 +32,7 @@ class UserList extends StatelessWidget {
       primary: true,
       items: songQueue,
       itemBuilder: (context, itemAnimation, item, i) {
-        final canRemove = passwordHash != null && onRemove != null && item.password == passwordHash;
+        final canRemove = passwordHash != null && onRemove != null && item.passwordHash == passwordHash;
 
         if (i == songQueueNowPlaying) {
           return NowPlaying(songCache: songCache, api: api, entry: item, onRemove: canRemove ? () {} : null);
@@ -45,7 +45,7 @@ class UserList extends StatelessWidget {
           predictedPlayTime: (i > 0 && (songQueueNowPlaying == null || i > songQueueNowPlaying!))
               ? songQueue[i - 1].predictedEnd
               : null,
-          onRemove: () => onRemove?.call(item.id),
+          onRemove: canRemove ? () => onRemove?.call(item.id) : null,
         );
       },
       areItemsTheSame: (a, b) => a.id == b.id,

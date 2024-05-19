@@ -32,6 +32,7 @@ class SongCard extends StatelessWidget {
   final duet = ConstraintId('duet');
   final singerId = ConstraintId('singer');
   final deleteId = ConstraintId('delete');
+  final songDetailsId = ConstraintId('songDetails');
   final String? singer;
   final DateTime? predictedPlaytime;
   final ServerApi api;
@@ -48,14 +49,21 @@ class SongCard extends StatelessWidget {
       child: Card(
         shape: selected
             ? RoundedRectangleBorder(
-                side: BorderSide(color: theme.colorScheme.primary, width: 2), borderRadius: BorderRadius.circular(12))
+                side: BorderSide(color: theme.colorScheme.primary, width: 2),
+                borderRadius: BorderRadius.circular(12),
+              )
             : null,
         child: InkWell(
           borderRadius: BorderRadius.circular(4),
           onTap: disabled
               ? null
               : () {
-                  showAddSongDialog(context, song: song, api: api, playlistCubit: context.read<PlaylistCubit>());
+                  showAddSongDialog(
+                    context,
+                    song: song,
+                    api: api,
+                    playlistCubit: context.read<PlaylistCubit>(),
+                  );
                 },
           child: ConstraintLayout(
             showHelperWidgets: true,
@@ -71,17 +79,23 @@ class SongCard extends StatelessWidget {
                   centerVerticalTo: song.duet ? duet : null,
                   top: song.duet ? null : parent.top.margin(8),
                   left: song.duet ? duet.right.margin(8) : parent.left.margin(8),
+                  // right: coverImage.left.margin(8),
                   right: onRemove != null ? deleteId.left.margin(8) : coverImage.left.margin(8),
                   width: matchConstraint,
                 ),
               if (singer != null && onRemove != null)
                 Tooltip(
-                  message: context.t.playlist.deleteLabel,
-                  child: const Icon(Icons.remove),
+                  message: context.t.playlist.userList.delete,
+                  child: IconButton(
+                    onPressed: () {
+                      showDialog(context: context, builder: (context) => _confirmRemoveDialog(context));
+                    },
+                    icon: const Icon(Icons.delete_forever),
+                  ),
                 ).applyConstraint(
                   id: deleteId,
-                  right: coverImage.left.margin(8),
-                  centerVerticalTo: singerId,
+                  right: songDetailsId.left,
+                  centerVerticalTo: songDetailsId,
                 ),
               Text(
                 song.title,
@@ -137,7 +151,11 @@ class SongCard extends StatelessWidget {
                   onPressed: () => showSongDetailsDialog(context, song),
                   icon: const Icon(Icons.lyrics),
                 ),
-              ).applyConstraint(right: coverImage.left.margin(4), top: parent.top.margin(4)),
+              ).applyConstraint(
+                id: songDetailsId,
+                right: coverImage.left.margin(4),
+                top: parent.top.margin(4),
+              ),
               if (song.duet)
                 Tooltip(
                   message: context.t.core.twoPlayerSongTooltip,
@@ -153,6 +171,35 @@ class SongCard extends StatelessWidget {
       ),
     );
   }
+
+  AlertDialog _confirmRemoveDialog(BuildContext context) => AlertDialog(
+        title: Column(
+          children: [
+            Text(context.t.playlist.userList.confirmDelete),
+            const SizedBox(height: 8),
+            SongCard(
+              song: song,
+              api: api,
+              singer: singer,
+              disabled: true,
+              predictedPlaytime: predictedPlaytime,
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: Text(context.t.playlist.userList.cancel),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              onRemove!();
+              Navigator.of(context).pop();
+            },
+            child: Text(context.t.playlist.userList.submit),
+          ),
+        ],
+      );
 
   Image coverImageWidget() => Image.network(
         '${serverHost.media}/${song.coverPath}',

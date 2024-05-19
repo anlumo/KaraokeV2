@@ -12,5 +12,11 @@
         "textFieldLabel": "Report",
         "submitButton": "Submit",
         "cancelButton": "Cancel"
+    },
+    "userList": {
+        "delete": "Remove submission",
+        "confirmDelete": "Are you sure you want to remove this submission?",
+        "submit": "Remove",
+        "cancel": "Cancel"
     }
 }
