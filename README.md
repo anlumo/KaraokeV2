@@ -59,6 +59,14 @@ karaoke-server -c config.yaml
 
 The server can serve the frontend, the song database, and its own REST/WebSocket API at the same time. It's possible to have a reverse proxy in front of it, but it's not really necessary (unless TLS is desired).
 
+## Docker
+
+Before running make sure to softlink the MasterCollection to `songs`. You can do this via: `ln -s /some/thing/MasterCollection songs`
+
+You can run the docker container via `docker compose up`
+
+This build may take a long time (10min). If everything worked you should see the interface at 127.0.0.1:8080 and the covers should also load
+
 ## Contributions
 
 Contributions are welcome, please fork and open a pull request! You have to agree to use the same license as this project.
