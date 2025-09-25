@@ -1,23 +1,15 @@
-FROM rust:slim-bookworm
+FROM rust:slim-bookworm AS builder
 
-RUN apt-get update
-RUN apt-get install -y curl xz-utils chromium git pkg-config libavutil-dev libavcodec-dev libavformat-dev libavfilter-dev libswscale-dev libswresample-dev libavdevice-dev clang libclang-dev llvm-dev
-
-RUN cargo install cargo-make
-
-# # download Flutter SDK
-RUN curl -L https://storage.googleapis.com/flutter_infra_release/releases/stable/linux/flutter_linux_3.22.3-stable.tar.xz | tar xJ 
-RUN mv flutter /usr/local/flutter
-
-RUN git config --global --add safe.directory /usr/local/flutter
+RUN apt-get update && \
+  apt-get install -y curl xz-utils chromium pkg-config libavutil-dev libavformat-dev libavdevice-dev git clang && \
+  curl -L https://storage.googleapis.com/flutter_infra_release/releases/stable/linux/flutter_linux_3.22.3-stable.tar.xz | tar xJ && \
+  mv flutter /usr/local/flutter && \
+  git config --global --add safe.directory /usr/local/flutter
 
 # # Set flutter environment path
 ENV PATH="/usr/local/flutter/bin:/usr/local/flutter/bin/cache/dart-sdk/bin:${PATH}"
 ENV CHROME_EXECUTABLE="/usr/bin/chromium"
 
-
-# # Run flutter doctor
-RUN flutter doctor
 
 WORKDIR /usr/local/karaoke
 
@@ -28,15 +20,26 @@ COPY Cargo.toml .
 COPY Makefile.toml .
 
 
-RUN cargo make build-flutter
-RUN cargo make build-server
+RUN cd karaokeparty && \
+  dart run slang && \
+  flutter build web --release --wasm && \
+  cd .. && \
+  cargo build --bin importer --release && \
+  cargo build --bin karaoke-server --release
 
 
+FROM rust:slim-bookworm
+
+RUN apt-get update && apt-get install -y libavutil57 libavformat59 libavdevice59 
+
+WORKDIR /usr/local/karaoke
+COPY --from=builder /usr/local/karaoke/target/release/karaoke-server karaoke-server
+COPY --from=builder /usr/local/karaoke/target/release/importer importer
+COPY --from=builder /usr/local/karaoke/karaokeparty/build/web karaokeparty/build/web
 COPY docker-run.sh .
 RUN chmod +x docker-run.sh
 
 COPY config.docker.yaml .
 ENTRYPOINT ["./docker-run.sh"]
-#ENTRYPOINT ["tail", "-f", "/dev/null"]
 
 

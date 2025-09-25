@@ -6,15 +6,15 @@ In these parties, people want to queue up for singing songs. They want to discov
 
 This implementation solves the problem by using technology.
 
-* The DJ has a computer at their station where they can host a central management server in the local WiFi, and they can see the list of upcoming songs.
-* The participants access the song database using their cellphone (or a shared station provided by the karaoke bar). They can search for songs, filter them, and then add  songs to the queue.
-* The DJ can also rearrange the song queue in case there's some special needs (like someone needing to sing right away because they're about to leave).
+- The DJ has a computer at their station where they can host a central management server in the local WiFi, and they can see the list of upcoming songs.
+- The participants access the song database using their cellphone (or a shared station provided by the karaoke bar). They can search for songs, filter them, and then add songs to the queue.
+- The DJ can also rearrange the song queue in case there's some special needs (like someone needing to sing right away because they're about to leave).
 
 The project consists of three programs:
 
-* The [importer](importer/), which scans the song library for metadata information and stores it in a sqlite database (for performance reasons).
-* The [karaoke-server](karaoke-server/), which has to run on the local network during the party.
-* The [karaokeparty](karaokeparty/) app, which is the (web) frontend people (participants and the DJ) are supposed to use during the party.
+- The [importer](importer/), which scans the song library for metadata information and stores it in a sqlite database (for performance reasons).
+- The [karaoke-server](karaoke-server/), which has to run on the local network during the party.
+- The [karaokeparty](karaokeparty/) app, which is the (web) frontend people (participants and the DJ) are supposed to use during the party.
 
 ## Dependencies
 
@@ -59,13 +59,19 @@ karaoke-server -c config.yaml
 
 The server can serve the frontend, the song database, and its own REST/WebSocket API at the same time. It's possible to have a reverse proxy in front of it, but it's not really necessary (unless TLS is desired).
 
-## Docker
+## Docker / Podman
+
+(Requires: `docker` + `docker-compose` or `podman` + `podman-compose`)
 
 Before running make sure to softlink the MasterCollection to `songs`. You can do this via: `ln -s /some/thing/MasterCollection songs`
+(Hint: If the `songs` folder already exist make sure to delete if first)
 
-You can run the docker container via `docker compose up`
+You can then run the docker container via `docker compose up` or `podman compose up`
 
-This build may take a long time (10min). If everything worked you should see the interface at 127.0.0.1:8080 and the covers should also load
+This build may take a long time (10min). If everything worked you should see the interface at `127.0.0.1:8080` and the covers should also load.
+If the covers don't load you may need to change the number for `-s` inside the `docker-run.sh` file and rebuild the container + delete the old `songs.db`.
+
+Info: If you want to recreate the songs database, then you should delete the file `songsdb/songs.db` and rerun the container.
 
 ## Contributions
 
