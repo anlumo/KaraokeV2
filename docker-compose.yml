@@ -1,0 +1,9 @@
+services:
+  karaoke:
+    build: .
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./songsdb/:/usr/local/karaoke/songsdb/
+      - ./songs/:/usr/local/karaoke/songs/ 
+
